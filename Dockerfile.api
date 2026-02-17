@@ -1,0 +1,28 @@
+# Multi-stage build para la API de predicción de dengue
+FROM python:3.11-slim AS base
+
+WORKDIR /app
+
+# Deps del sistema
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc libgomp1 curl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Deps de Python (cacheadas si no cambian)
+COPY requirements-prod.txt .
+RUN pip install --no-cache-dir -r requirements-prod.txt
+
+# Código fuente
+COPY src/ src/
+COPY app/ app/
+COPY configs/ configs/
+
+# Artefactos del modelo: se montan como volumen en docker-compose
+# Para deploy standalone (ECS), montar desde S3 o copiar en CI/CD
+
+ENV PYTHONPATH=/app
+ENV MODEL_ARTIFACT_PATH=/app/mlflow-artifacts/models/m-81d328499d7d4eeaa187f9c052124f62/artifacts
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app.api:app", "--host", "0.0.0.0", "--port", "8000"]

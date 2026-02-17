@@ -1,0 +1,58 @@
+# Docker Compose para desarrollo local
+# Levanta API + Dashboard + MLflow UI
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./monitoring:/app/monitoring
+      - ./mlflow-artifacts:/app/mlflow-artifacts:ro
+    environment:
+      - MODEL_ARTIFACT_PATH=/app/mlflow-artifacts/models/m-81d328499d7d4eeaa187f9c052124f62/artifacts
+      - PYTHONPATH=/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./monitoring:/app/monitoring:ro
+      - ./mlflow-artifacts:/app/mlflow-artifacts:ro
+      - ./data/raw/historical_api_data:/app/data/raw/historical_api_data:ro
+      - ./data/external:/app/data/external:ro
+    environment:
+      - API_URL=http://api:8000
+      - PYTHONPATH=/app
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mlflow:
+    image: python:3.11-slim
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/app/mlruns
+      - ./mlflow-artifacts:/app/mlflow-artifacts
+    working_dir: /app
+    command: >
+      bash -c "pip install mlflow>=2.7.0 -q &&
+               mlflow ui --host 0.0.0.0 --port 5000 
+               --backend-store-uri /app/mlruns 
+               --default-artifact-root /app/mlflow-artifacts"
+    restart: unless-stopped
+    profiles:
+      - full  # solo con: docker compose --profile full up

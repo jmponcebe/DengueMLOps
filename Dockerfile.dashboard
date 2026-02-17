@@ -1,0 +1,26 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc libgomp1 && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY requirements-prod.txt .
+RUN pip install --no-cache-dir -r requirements-prod.txt
+
+COPY src/ src/
+COPY app/ app/
+COPY configs/ configs/
+
+# Artefactos y datos: se montan como volúmenes en docker-compose
+# Ver docker-compose.yml para los montajes
+
+ENV PYTHONPATH=/app
+ENV API_URL=http://api:8000
+
+EXPOSE 8501
+
+CMD ["streamlit", "run", "app/streamlit_app.py", \
+     "--server.port=8501", "--server.address=0.0.0.0", \
+     "--server.headless=true"]
