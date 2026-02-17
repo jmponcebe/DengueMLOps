@@ -6,12 +6,10 @@ Sirve el modelo champion desde MLflow Model Registry.
 import os
 import sys
 import logging
-import time
 from pathlib import Path
 from contextlib import asynccontextmanager
 from datetime import datetime
 
-import numpy as np
 import pandas as pd
 import mlflow
 import mlflow.xgboost  # type: ignore[attr-defined]
@@ -22,13 +20,13 @@ from fastapi.middleware.cors import CORSMiddleware
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from app.schemas import (
+from app.schemas import (  # noqa: E402
     PredictionInput, PredictionResult, PredictionResponse,
     BatchInput, BatchResponse,
     ModelInfo, HealthResponse,
     FEATURE_NAMES, ALERT_LABELS, ALERT_COLORS,
 )
-from src.models.constants import LABEL_MAP_INV
+from src.models.constants import LABEL_MAP_INV  # noqa: E402
 
 logger = logging.getLogger("dengue-api")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")

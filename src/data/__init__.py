@@ -8,10 +8,10 @@ Main components:
 
 Usage:
     from data import sync_dataset, MosqlimateDataLoader
-    
+
     # Sincronizar datos (descarga completo o actualiza faltantes)
     sync_dataset()
-    
+
     # Cargar datos
     loader = MosqlimateDataLoader()
     df = loader.load_all_states_data()
@@ -22,7 +22,7 @@ from .mosqlimate_loader import MosqlimateDataLoader, DataProcessor
 
 __all__ = [
     'MosqlimateAPIClient',
-    'MosqlimateDataLoader', 
+    'MosqlimateDataLoader',
     'DataProcessor',
     'sync_dataset'
 ]

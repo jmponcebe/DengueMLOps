@@ -6,14 +6,12 @@ en producción vs. los datos de referencia (entrenamiento).
 Genera reportes HTML para el dashboard y logs para alertas.
 """
 
-import os
 import logging
 from pathlib import Path
 from datetime import datetime
 from typing import Optional
 
 import pandas as pd
-import numpy as np
 
 from evidently import Report, Dataset, DataDefinition
 from evidently.presets import DataDriftPreset, DataSummaryPreset
@@ -39,7 +37,7 @@ PREDICTION_COL = "predicted_nivel"
 class DriftDetector:
     """
     Detecta data drift comparando datos de producción contra referencia.
-    
+
     Genera reportes Evidently en HTML para incluir en el dashboard
     Streamlit y para la documentación del TFM.
     """

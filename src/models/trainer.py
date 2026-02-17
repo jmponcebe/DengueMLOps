@@ -5,7 +5,6 @@ Encapsula train/predict/log para producción y reentrenamiento.
 
 import os
 import time
-import json
 import matplotlib.pyplot as plt
 
 import mlflow
@@ -14,7 +13,6 @@ from mlflow.models import infer_signature
 
 from src.models.constants import (
     NEEDS_ZERO_INDEX, SEED, encode_labels, decode_labels,
-    compute_balanced_weights,
 )
 from src.models.evaluation import (
     compute_metrics, plot_confusion_matrix,
@@ -22,7 +20,9 @@ from src.models.evaluation import (
 )
 from configs.mlflow_config import DEFAULT_TAGS, ARTIFACT_TEMP_DIR
 
-_tmp = lambda name: os.path.join(ARTIFACT_TEMP_DIR, name)
+
+def _tmp(name):
+    return os.path.join(ARTIFACT_TEMP_DIR, name)
 
 
 class DengueModelTrainer:

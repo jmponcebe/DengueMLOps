@@ -3,7 +3,7 @@ Pydantic schemas para la API de predicción de dengue.
 Validación de inputs y serialización de responses.
 """
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 from typing import List, Optional, Dict
 from enum import IntEnum
 

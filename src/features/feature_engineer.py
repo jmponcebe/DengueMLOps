@@ -12,14 +12,14 @@ Key principles:
 import pandas as pd
 import numpy as np
 import logging
-from typing import List, Optional, Dict
+from typing import Dict, List
 
 from .constants import (
-    TARGET, TEMPORAL_VARS, GEO_VARS, CLIMATE_VARS, LEAKAGE_VARS,
+    CLIMATE_VARS, LEAKAGE_VARS,
     REGION_MAP, REGIONS, ALL_ENGINEERED_FEATURES,
     TEMPORAL_FEATURES, CLIMATE_FEATURES, GEO_FEATURES,
     CLIMATE_BASE_VARS, LAG_PERIODS, ROLLING_WINDOWS,
-    PRODUCTION_ID_COLS, PRODUCTION_COLUMNS,
+    PRODUCTION_COLUMNS,
 )
 
 logger = logging.getLogger(__name__)
@@ -28,10 +28,10 @@ logger = logging.getLogger(__name__)
 class DengueFeatureEngineer:
     """
     Pipeline de feature engineering para predicción de dengue.
-    
+
     Genera features temporales (encoding cíclico), climáticas (lags + rolling)
     y geográficas (log población + macro-región) a partir del dataset crudo.
-    
+
     Usage:
         fe = DengueFeatureEngineer()
         df_features = fe.transform(df_raw)
@@ -46,12 +46,12 @@ class DengueFeatureEngineer:
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Aplica el pipeline completo de feature engineering.
-        
+
         Args:
             df: DataFrame con columnas originales del dataset dengue.
                 Requiere: month, SE, pop, uf, municipio_geocodigo, data_iniSE,
                           tempmed, umidmed, tempmin, tempmax
-        
+
         Returns:
             DataFrame con todas las columnas originales + features engineered.
         """
@@ -72,10 +72,10 @@ class DengueFeatureEngineer:
     def get_production_dataset(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Filtra a columnas seguras para producción (sin leakage).
-        
+
         Args:
             df: DataFrame con features engineered (output de transform()).
-        
+
         Returns:
             DataFrame con solo columnas de producción.
         """
@@ -132,8 +132,8 @@ class DengueFeatureEngineer:
         # Interacciones
         df['temp_x_humid_lag4w'] = df['tempmed_lag4w'] * df['umidmed_lag4w']
         df['temp_range_lag4w'] = (
-            df.groupby('municipio_geocodigo')['tempmax'].shift(4) -
-            df.groupby('municipio_geocodigo')['tempmin'].shift(4)
+            df.groupby('municipio_geocodigo')['tempmax'].shift(4)
+            - df.groupby('municipio_geocodigo')['tempmin'].shift(4)
         )
 
         df = df.drop(columns=['date'], errors='ignore')
@@ -159,7 +159,7 @@ class DengueFeatureEngineer:
     def _validate_input(self, df: pd.DataFrame):
         """Verifica que las columnas necesarias existen."""
         required = ['month', 'SE', 'pop', 'uf', 'municipio_geocodigo',
-                     'data_iniSE', 'tempmed', 'umidmed', 'tempmin', 'tempmax']
+                    'data_iniSE', 'tempmed', 'umidmed', 'tempmin', 'tempmax']
         missing = [c for c in required if c not in df.columns]
         if missing:
             raise ValueError(f"Columnas requeridas faltantes: {missing}")

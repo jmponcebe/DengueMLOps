@@ -12,9 +12,7 @@ import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as st_components
 import plotly.express as px
-import plotly.graph_objects as go
 from pathlib import Path
-from datetime import datetime
 
 # Project root
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -772,7 +770,7 @@ def monitoring_page():
     st.markdown("---")
     if st.button("📊 Generar reporte de drift", type="secondary"):
         try:
-            resp = requests.post(f"{API_URL}/monitoring/flush", timeout=5)
+            requests.post(f"{API_URL}/monitoring/flush", timeout=5)
             st.success("Buffer de predicciones flushed. Ejecuta el drift detector para generar el reporte.")
         except Exception:
             st.warning("API no disponible para flush.")
