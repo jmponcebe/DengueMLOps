@@ -85,7 +85,10 @@ def load_model():
         return
     except Exception as e:
         logger.error(f"Error cargando modelo: {e}")
-        raise RuntimeError(f"No se pudo cargar el modelo: {e}")
+        logger.warning(
+            "API arrancando en modo degraded (sin modelo). "
+            "Los endpoints de predicción devolverán 503."
+        )
 
 
 @asynccontextmanager

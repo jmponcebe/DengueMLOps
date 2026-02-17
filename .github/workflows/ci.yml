@@ -59,6 +59,14 @@ jobs:
       - name: Test API container starts
         run: |
           docker run -d --name test-api -p 8000:8000 dengue-api:${{ github.sha }}
-          sleep 10
-          curl -f http://localhost:8000/health || exit 1
+          # Wait for container to be ready
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:8000/health > /dev/null 2>&1; then
+              echo "API ready after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+          # Verify health endpoint responds (model may be absent in CI)
+          curl -f http://localhost:8000/health | python3 -m json.tool
           docker stop test-api
