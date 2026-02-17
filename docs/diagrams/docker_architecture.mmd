@@ -1,0 +1,42 @@
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '16px', 'lineColor': '#444', 'primaryColor': '#e3f2fd', 'primaryBorderColor': '#1565c0'}}}%%
+
+flowchart TB
+    USER(("👤 Usuario"))
+
+    USER -->|"puerto 8501"| DASH_SRV
+    USER -->|"puerto 8000"| API_SRV
+
+    subgraph COMPOSE["docker-compose.yml"]
+        direction LR
+
+        subgraph DASH["Dashboard · :8501"]
+            DASH_SRV["Streamlit<br/>Mapa · Predicción<br/>Info · Monitoreo"]
+        end
+
+        subgraph API["API · :8000"]
+            API_SRV["FastAPI + Uvicorn<br/>XGBoost model"]
+            API_HC["Healthcheck<br/>curl /health<br/>30s · 3 retries"]
+        end
+
+        subgraph MLF["MLflow · :5000<br/>⟨profile: full⟩"]
+            MLF_SRV["MLflow UI<br/>Tracking Server"]
+        end
+    end
+
+    DASH_SRV -->|"HTTP api:8000"| API_SRV
+    DASH_SRV -.->|"depends_on<br/>service_healthy"| API_HC
+
+    API_SRV -->|"escribe"| V1[("monitoring/<br/>predictions_log.csv")]
+    API_SRV -->|"lee"| V2[("mlflow-artifacts/<br/>modelo serializado")]
+    DASH_SRV -->|"lee"| V3[("data/raw/<br/>parquet")]
+    DASH_SRV -->|"lee"| V4[("data/external/<br/>brazil_uf.geojson")]
+
+    style USER fill:#02576c,stroke:#024d5f,color:#fff,stroke-width:2px
+    style COMPOSE fill:#f8f9fa,stroke:#02576c,stroke-width:2px,color:#000
+    style API fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000
+    style DASH fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000
+    style MLF fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#000,stroke-dasharray: 5 5
+    style V1 fill:#f5f5f5,stroke:#666,color:#000
+    style V2 fill:#f5f5f5,stroke:#666,color:#000
+    style V3 fill:#f5f5f5,stroke:#666,color:#000
+    style V4 fill:#f5f5f5,stroke:#666,color:#000

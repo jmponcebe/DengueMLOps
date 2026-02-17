@@ -1,0 +1,50 @@
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '16px', 'lineColor': '#444', 'primaryColor': '#e3f2fd', 'primaryBorderColor': '#1565c0'}}}%%
+
+flowchart TB
+    DEV(("👨‍💻 Dev")) -->|"git tag v1.0<br/>git push"| REPO["GitHub<br/>tfm-mlops"]
+    REPO -->|"on: push tags v*"| CI
+
+    subgraph CI["GitHub Actions<br/>deploy.yml"]
+        BUILD["Build Docker<br/>images"] --> PUSH["Push a ECR<br/>tag + latest"] --> UPDATE["ecs update-service<br/>force-new-deployment"]
+    end
+
+    PUSH -->|"docker push"| ECR_API
+    PUSH -->|"docker push"| ECR_DASH
+    UPDATE -->|"rolling update"| ECS
+
+    subgraph AWS["AWS · us-east-1"]
+        direction TB
+
+        subgraph ECR["ECR · Container Registry"]
+            ECR_API["dengue-api"]
+            ECR_DASH["dengue-dashboard"]
+        end
+
+        ECR_API -->|"pull"| TASK_API
+        ECR_DASH -->|"pull"| TASK_DASH
+
+        subgraph ECS["ECS Fargate · dengue-cluster"]
+            TASK_API["Task API<br/>FastAPI :8000"]
+            TASK_DASH["Task Dashboard<br/>Streamlit :8501"]
+        end
+
+        ALB["ALB<br/>Load Balancer<br/>:80 / :443"]
+        CW[("CloudWatch<br/>Logs")]
+
+        ALB -->|"ruteo"| TASK_API
+        ALB -->|"ruteo"| TASK_DASH
+        TASK_API -->|"logs"| CW
+        TASK_DASH -->|"logs"| CW
+    end
+
+    INET(("🌐 Internet")) -->|"HTTPS"| ALB
+
+    style DEV fill:#02576c,stroke:#024d5f,color:#fff,stroke-width:2px
+    style INET fill:#02576c,stroke:#024d5f,color:#fff,stroke-width:2px
+    style REPO fill:#f5f5f5,stroke:#333,stroke-width:2px,color:#000
+    style CI fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000
+    style AWS fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#000
+    style ECR fill:#fce4ec,stroke:#c62828,stroke-width:2px,color:#000
+    style ECS fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000
+    style ALB fill:#02576c,stroke:#024d5f,color:#fff,stroke-width:2px
+    style CW fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px,color:#000

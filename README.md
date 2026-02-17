@@ -1,164 +1,213 @@
 # Predicción de Dengue en Brasil - Proyecto MLOps para TFM
 
-## 📋 Descripción del Proyecto
+## Descripción del Proyecto
 
-Este proyecto implementa un pipeline completo de MLOps para la predicción del riesgo de dengue por municipio en Brasil, desarrollado como parte de un Trabajo de Fin de Máster (TFM). El sistema utiliza datos históricos de dengue (2010-2025) y variables climáticas para generar predicciones de riesgo a nivel municipal.
+Pipeline MLOps completo para la predicción del nivel de alerta de dengue por municipio en Brasil, desarrollado como Trabajo de Fin de Máster (TFM). Utiliza datos históricos (2010-2025) de la API mosqlimate y variables climáticas para generar predicciones a nivel municipal respetando restricciones epidemiológicas reales.
 
-## 🎯 Objetivos
+## Objetivos
 
 - **Pipeline MLOps completo**: Desde ingesta de datos hasta monitoreo en producción
-- **Predicción de dengue**: Modelo que considera ciclos epidemiológicos de 5-6 años
-- **Visualización interactiva**: App Streamlit con mapa de Brasil y predicciones
+- **Predicción sin leakage**: Solo variables disponibles en tiempo real de predicción
+- **Visualización interactiva**: App Streamlit con mapa de Brasil
 - **Monitoreo de calidad**: Detección de data drift con Evidently
 - **Experimentación**: Tracking completo con MLflow
 
-## 🏗️ Arquitectura del Proyecto
+## Arquitectura del Proyecto
 
 ```text
 tfm-mlops/
-├── data/                   # Gestión de datos
-│   ├── raw/               # Datos originales (dengue, clima)
-│   ├── interim/           # Datos en procesamiento
-│   ├── processed/         # Datos finales para modelado
-│   └── external/          # Datos de terceros (shapefiles, etc.)
-├── notebooks/             # Jupyter notebooks para exploración
-├── src/                   # Código de producción
-│   ├── data/             # Ingesta y procesamiento de datos
-│   ├── features/         # Feature engineering
-│   ├── models/           # Entrenamiento y evaluación
-│   └── monitoring/       # Monitoreo y alertas
-├── app/                   # Aplicación Streamlit y API
-├── models/               # Modelos entrenados y artefactos
-├── monitoring/           # Reportes de monitoreo
-├── docs/                 # Documentación del proyecto
-├── tests/                # Tests unitarios e integración
-└── configs/              # Archivos de configuración
+├── data/                        # Gestión de datos
+│   ├── raw/                     # Datos originales (parquet jerárquico)
+│   ├── interim/                 # Datos intermedios y resúmenes del EDA
+│   ├── processed/               # Datasets finales para modelado
+│   └── external/                # Datos de terceros (shapefiles, etc.)
+├── notebooks/                   # Jupyter notebooks de exploración
+│   ├── 01-exploratory-data-analysis.ipynb
+│   ├── 02-feature-engineering.ipynb
+│   └── 03-modeling.ipynb
+├── src/                         # Código de producción
+│   ├── data/                    # Ingesta y procesamiento
+│   │   ├── api_client.py        # Cliente API mosqlimate (sync_dataset)
+│   │   └── mosqlimate_loader.py # Lectura de parquet local
+│   ├── features/                # Feature engineering
+│   │   ├── constants.py         # Clasificación de variables y constantes
+│   │   └── feature_engineer.py  # Pipeline DengueFeatureEngineer
+│   ├── models/                  # Entrenamiento y evaluación
+│   │   ├── constants.py         # Label maps, clases, balanced weights
+│   │   ├── evaluation.py        # Métricas, confusion matrix, reports
+│   │   └── trainer.py           # DengueModelTrainer con MLflow logging
+│   └── monitoring/              # Monitoreo y alertas
+├── app/                         # Aplicación Streamlit y API
+├── models/                      # Modelos entrenados y artefactos
+├── monitoring/                  # Reportes de monitoreo
+├── docs/                        # Documentación técnica y académica
+│   └── memoria/                 # Memoria TFM (LaTeX, CIDaeN UCLM)
+├── tests/                       # Tests unitarios
+│   ├── test_data_api.py         # Tests del cliente API
+│   └── test_features.py         # Tests de feature engineering (26 tests)
+└── configs/                     # Archivos de configuración
 ```
 
-## 🚀 Componentes Principales
+## Estado Actual del Proyecto
 
-### 1. **Ingesta de Datos**
+### Fase 1: Datos y Exploración — Completada
 
-- API mosqlimate para datos históricos de dengue
-- Datos climáticos (temperatura, precipitación, humedad)
-- Procesamiento ETL automatizado
+- **Ingesta**: Cliente API mosqlimate + loader de parquet local (27 estados, 2010-2025)
+- **EDA**: Análisis completo con 4.3M registros, 5,563 municipios
+- **Hallazgos clave**:
+  - Estacionalidad marcada: pico Mar-Abr, valle Sep (ratio 9.9x)
+  - Desbalance extremo del target: 93.1% nivel 1 (verde)
+  - Heterogeneidad regional significativa entre estados
+  - Clima opera con 4-8 semanas de lag sobre transmisión vectorial
 
-### 2. **Feature Engineering**
+### Fase 2: Feature Engineering — Completada
 
-- Detección de patrones cíclicos (5-6 años)
-- Variables epidemiológicas derivadas
-- Agregaciones temporales y espaciales
+- **15 features engineered** sin target leakage:
+  - Temporales (6): encoding cíclico de mes/SE, indicador temporada pico, trimestre
+  - Climáticas (4): lags 4-8 semanas, rolling means con shift, interacciones temp×humedad
+  - Geográficas (5): log población, macro-región brasileña (one-hot 5 regiones)
+- **Principios aplicados**:
+  - `shift()` antes de `rolling()` para evitar leakage temporal
+  - Region encoding por conocimiento de dominio (no target encoding)
+  - Variables epidemiológicas y clima simultáneo eliminados de producción
+- **Validación con modelo**: RF baseline vs RF+FE en validación temporal
+- **Módulo productivo**: `src/features/` con 26 tests unitarios (97% cobertura)
+- **Datasets de producción**: 25 columnas (9 ID + 15 features + target)
 
-### 3. **Modelado y Experimentación**
+### Fase 3: Modelado — Completada
 
-- Múltiples algoritmos (XGBoost, Random Forest, etc.)
-- Tracking completo con MLflow
-- Validación temporal y espacial
+- **5 experimentos MLflow** organizados por fase (baselines → evaluación final)
+- **Baselines**: Dummy, Logistic Regression, Decision Tree (macro_f1 ~0.23-0.32)
+- **Model Selection**: RF, XGBoost, LightGBM, CatBoost por defecto (~0.27)
+- **HP Tuning con Optuna**: 40 trials para XGBoost y LightGBM con nested runs, subsample 15%
+- **Class imbalance**: Balanced sample weights (macro_f1 0.27→0.38) y custom weights para salud pública
+- **Champion model**: XGBoost + balanced weights + Optuna HP → macro_f1=0.39, kappa=0.33 en test 2024
+- **MLflow avanzado**: Model Registry con alias "champion", dataset lineage, mlflow.evaluate(), SHAP
+- **Interpretabilidad**: SHAP TreeExplainer — `pop_log` y `month_sin` son los features más importantes
+- **Módulo productivo**: `src/models/` con constants, evaluation y trainer
 
-### 4. **Despliegue**
+### Fase 4: Deployment y Monitoreo — Completada
 
-- **App Streamlit**: Mapa interactivo de Brasil con predicciones
-- **API REST**: Endpoint para predicciones en tiempo real
-- **Containerización**: Docker para reproducibilidad
+- **API REST** (FastAPI): endpoints `/predict`, `/predict/batch`, `/health`, `/model/info`
+- **Streamlit Dashboard**: 4 páginas — mapa choropleth de Brasil por UF, predicción individual, info del modelo, monitoreo
+- **Mapa de alerta**: Visualización geoespacial con datos reales por semana epidemiológica, 3 métodos de agregación, detalle municipal
+- **Monitoreo**: DriftDetector con Evidently (DataDriftPreset, DataSummaryPreset), logging de predicciones a CSV
+- **Docker**: Multi-imagen (API + Dashboard), docker-compose con healthchecks y volúmenes
+- **CI/CD**: GitHub Actions — tests/lint en push, deploy a AWS ECR/ECS en tags
+- **AWS**: Guía de despliegue para EC2 y ECS/Fargate con Learner Lab
 
-### 5. **Monitoreo**
+### Fase 5: Memoria TFM — En progreso
 
-- **Data Drift**: Evidently para detectar cambios en distribución
-- **Model Performance**: Métricas de calidad en producción
-- **Alertas**: Sistema de notificaciones automáticas
+- **Plantilla**: CIDaeN UCLM, compilación con XeLaTeX + BibTeX
+- **Estructura MLOps-focused** (6 capítulos + apéndice):
+  - Cap 1: Introducción (motivación MLOps, stack, objetivos)
+  - Cap 2: Problema, Datos y Modelo (condensado, ~4 páginas)
+  - Cap 3: Experimentación y Trazabilidad con MLflow
+  - Cap 4: Servicio de Predicción (FastAPI, Streamlit, Docker)
+  - Cap 5: Infraestructura, CI/CD y Monitoreo
+  - Cap 6: Conclusiones y Trabajo Futuro
+  - Apéndice A: Stack tecnológico (21 herramientas con versiones verificadas)
+- **Bibliografía**: 18 referencias (epidemiología, ML, MLOps, frameworks)
+- **Capturas incluidas**: MLflow (10 screenshots), Swagger UI, Streamlit (mapa + predicción), Docker Compose, pytest + cobertura, confusion matrix
+- **Pendiente**: 3 diagramas (ciclo vectorial, arquitectura Docker, arquitectura AWS), 4 capturas de pantalla (GitHub Actions CI, smoke test, Evidently drift, Streamlit monitoreo), dedicatoria/agradecimientos
 
-## 📊 Datos Utilizados
+## Datos
 
-### Fuentes de Datos
+### Fuentes
 
-- **Dengue**: API mosqlimate (2010-2025)
-- **Clima**: Variables meteorológicas por municipio
-- **Geográficos**: Shapefiles de municipios brasileños
+- **Dengue**: API mosqlimate (2010-2025), estructura jerárquica `uf={estado}/year={año}/`
+- **Clima**: Variables meteorológicas por municipio (temperatura, humedad)
 
-### Variables Principales
+### Target
 
-- Casos confirmados de dengue
-- Temperatura media, máxima, mínima
-- Precipitación acumulada
-- Humedad relativa
-- Índice de vegetación (NDVI)
+- `nivel`: Nivel de alerta epidemiológica (1-4)
+  - Nivel 1 (verde): 93.1% — Sin alerta
+  - Nivel 2 (amarillo): 3.9% — Atenção
+  - Nivel 3 (naranja): 0.2% — Alerta
+  - Nivel 4 (rojo): 2.8% — Alerta crítico
 
-## 🛠️ Tecnologías
+### Splits Temporales
 
-### Desarrollo y Experimentación
+- **Train**: 2010-2021 (3.48M registros)
+- **Validation**: 2022-2023 (584K registros)
+- **Test**: 2024 (290K registros)
 
-- **Python**: Lenguaje principal
-- **Jupyter**: Notebooks para exploración
-- **Pandas/NumPy**: Manipulación de datos
-- **Scikit-learn**: Modelado ML
+## Uso Rápido
 
-### MLOps y Deployment
+### Instalación
 
-- **MLflow**: Experiment tracking y model registry
-- **Streamlit**: Aplicación web interactiva
-- **FastAPI**: API REST para serving
-- **Docker**: Containerización
+```bash
+git clone <repo-url>
+cd tfm-mlops
+python -m venv .venv
+.venv\Scripts\activate  # Linux: source .venv/bin/activate
+pip install -r requirements.txt
+```
 
-### Monitoreo y Calidad
+### Configurar variables de entorno
 
-- **Evidently**: Data drift y model monitoring
-- **Pytest**: Testing automatizado
-- **GitHub Actions**: CI/CD pipeline
+```bash
+# Copiar el ejemplo y rellenar con valores reales
+cp .env.example .env
+# Variables principales: MOSQLIMATE_API_KEY, AWS_ACCESS_KEY_ID, etc.
+```
 
-### Visualización
+### Sincronizar datos
 
-- **Plotly**: Gráficos interactivos
-- **Folium**: Mapas dinámicos
-- **Seaborn/Matplotlib**: Análisis exploratorio
+```python
+from src.data import sync_dataset
+sync_dataset(year_start=2010)
+```
 
-## 📈 Roadmap de Desarrollo
+### Feature engineering
 
-### Fase 1: Exploración y Análisis (Días 1-2)
+```python
+from src.features import DengueFeatureEngineer
+import pandas as pd
 
-- [x] Setup del proyecto y estructura
-- [ ] Análisis exploratorio de datos
-- [ ] Identificación de patrones cíclicos
-- [ ] Documentación inicial
+df = pd.read_parquet('data/processed/dengue_train_2010_2021.parquet')
+fe = DengueFeatureEngineer()
+df_full = fe.transform(df)
+df_prod = fe.get_production_dataset(df_full)
+```
 
-### Fase 2: Feature Engineering y Modelado (Días 3-4)
+### Levantar API + Dashboard (Docker)
 
-- [ ] Feature engineering avanzado
-- [ ] Experimentación con modelos
-- [ ] Configuración MLflow
-- [ ] Validación y selección de modelo
+```bash
+docker compose up --build
+# API: http://localhost:8000  |  Dashboard: http://localhost:8501
+```
 
-### Fase 3: Desarrollo de Aplicación (Días 5-6)
+### Levantar API + Dashboard (local)
 
-- [ ] Desarrollo app Streamlit
-- [ ] API REST para serving
-- [ ] Integración con mapas de Brasil
-- [ ] Testing e2e
+```bash
+# Terminal 1: API
+uvicorn app.api:app --host 0.0.0.0 --port 8000
 
-### Fase 4: Monitoreo y Producción (Días 7-8)
+# Terminal 2: Dashboard
+streamlit run app/streamlit_app.py
+```
 
-- [ ] Implementación monitoring
-- [ ] Setup Evidently
-- [ ] Containerización
-- [ ] CI/CD pipeline (opcional)
+### Tests
 
-## 📚 Para el TFM
+```bash
+pytest tests/ -v
+```
 
-Este proyecto está diseñado para generar contenido rico para la memoria del TFM:
+## Tecnologías
 
-- **Metodología**: Pipeline MLOps completo documentado
-- **Experimentación**: Múltiples modelos y métricas en MLflow
-- **Innovación**: Enfoque en ciclos epidemiológicos del dengue
-- **Impacto**: Aplicación práctica para salud pública
-- **Calidad**: Monitoreo y testing automatizado
-
-## 🚦 Estado Actual
-
-🔄 **En desarrollo activo** - Configuración inicial completada
-
-## 📞 Contacto
-
-Proyecto desarrollado para TFM en MLOps - Predicción de Dengue en Brasil
+- **Core**: Python 3.13, Pandas 2.3, NumPy 2.3, Scikit-learn 1.7
+- **ML**: XGBoost 3.0, Optuna 4.5, SHAP 0.50
+- **MLOps**: MLflow 3.3 (tracking, registry, evaluate), Evidently 0.7
+- **App**: Streamlit 1.49, FastAPI 0.116, Pydantic 2.11
+- **Viz**: Plotly 6.3, Matplotlib, Seaborn
+- **Testing**: Pytest 8.4 (con cobertura)
+- **Infra**: Docker 28.2, Docker Compose 2.37, GitHub Actions
+- **Cloud**: AWS ECR/ECS/Fargate/EC2
+- **Thesis**: LaTeX (XeLaTeX), BibTeX, MiKTeX
 
 ---
 
-***Última actualización: Septiembre 2025***
+## Última actualización
+
+Febrero 2026

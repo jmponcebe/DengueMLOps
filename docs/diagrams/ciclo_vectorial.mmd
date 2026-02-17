@@ -1,0 +1,32 @@
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '16px', 'lineColor': '#444', 'primaryColor': '#e3f2fd', 'primaryBorderColor': '#1565c0'}}}%%
+
+flowchart TB
+    subgraph CICLO["Ciclo vectorial · 4-8 semanas de retardo"]
+        direction LR
+        A["🌡️ Clima<br/>Semana T-8<br/>Temp · Precip · Humedad"]
+        B["🥚 Oviposición<br/>Semana T-6<br/>Huevos Aedes aegypti"]
+        C["🐛 Desarrollo<br/>Semana T-4<br/>Larva → Pupa"]
+        D["🦟 Adulto<br/>Semana T-2<br/>Mosquito infectado"]
+        E["🏥 Reporte<br/>Semana T<br/>Diagnóstico"]
+
+        A -->|"eclosión"| B
+        B -->|"7-14 días"| C
+        C -->|"emergencia"| D
+        D -->|"picadura"| E
+    end
+
+    A -->|"lag 8 semanas"| F1["tempmed_lag8w"]
+    A -->|"lag 4 semanas"| F2["umidmed_lag4w"]
+    A -->|"interacción lag 8w"| F3["tempmed_umid_lag8w"]
+    A -->|"rolling 4 semanas"| F4["umidmed_roll4w"]
+
+    style CICLO fill:#f8f9fa,stroke:#02576c,stroke-width:2px,color:#000
+    style A fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000
+    style B fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000
+    style C fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#000
+    style D fill:#fce4ec,stroke:#c62828,stroke-width:2px,color:#000
+    style E fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px,color:#000
+    style F1 fill:#f5f5f5,stroke:#02576c,stroke-width:2px,color:#000
+    style F2 fill:#f5f5f5,stroke:#02576c,stroke-width:2px,color:#000
+    style F3 fill:#f5f5f5,stroke:#02576c,stroke-width:2px,color:#000
+    style F4 fill:#f5f5f5,stroke:#02576c,stroke-width:2px,color:#000
