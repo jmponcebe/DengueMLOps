@@ -1,0 +1,63 @@
+# CD Pipeline — Push a ECR + Deploy a ECS
+# Se ejecuta al crear un tag de release (v*)
+
+name: CD - Deploy to AWS
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY_API: dengue-api
+  ECR_REPOSITORY_DASHBOARD: dengue-dashboard
+  ECS_CLUSTER: dengue-cluster
+  ECS_SERVICE_API: dengue-api-service
+  ECS_SERVICE_DASHBOARD: dengue-dashboard-service
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & push API image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.ref_name }}
+        run: |
+          docker build -f Dockerfile.api -t $ECR_REGISTRY/$ECR_REPOSITORY_API:$IMAGE_TAG .
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY_API:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY_API:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_API:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_API:latest
+
+      - name: Build & push Dashboard image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.ref_name }}
+        run: |
+          docker build -f Dockerfile.dashboard -t $ECR_REGISTRY/$ECR_REPOSITORY_DASHBOARD:$IMAGE_TAG .
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY_DASHBOARD:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY_DASHBOARD:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_DASHBOARD:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_DASHBOARD:latest
+
+      - name: Update ECS services
+        run: |
+          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE_API --force-new-deployment
+          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE_DASHBOARD --force-new-deployment
+          echo "Deploy iniciado. ECS actualizará los contenedores progresivamente."
