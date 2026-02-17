@@ -31,34 +31,45 @@ DATA_CONFIG = {
 
 # Model configuration
 MODEL_CONFIG = {
-    "target_variable": "casos_dengue",
+    "target_variable": "nivel",
+    "target_classes": [1, 2, 3, 4],
+    "class_labels": ["Verde", "Amarelo", "Laranja", "Vermelho"],
+
     "algorithms": {
-        "xgboost": {
-            "n_estimators": [100, 200, 500],
-            "max_depth": [3, 6, 10],
-            "learning_rate": [0.01, 0.1, 0.2]
-        },
         "random_forest": {
-            "n_estimators": [100, 200],
+            "n_estimators": [100, 200, 500],
             "max_depth": [10, 20, None],
-            "min_samples_split": [2, 5, 10]
+            "min_samples_split": [2, 5, 10],
+        },
+        "xgboost": {
+            "n_estimators": [100, 300, 500],
+            "max_depth": [3, 6, 10],
+            "learning_rate": [0.01, 0.1, 0.2],
         },
         "lightgbm": {
-            "n_estimators": [100, 200],
-            "max_depth": [5, 10],
-            "learning_rate": [0.01, 0.1]
-        }
+            "n_estimators": [100, 300, 500],
+            "max_depth": [5, 10, -1],
+            "learning_rate": [0.01, 0.1, 0.2],
+        },
+        "catboost": {
+            "iterations": [200, 500],
+            "depth": [4, 6, 8],
+            "learning_rate": [0.03, 0.1],
+        },
     },
-    
+
     "validation": {
-        "method": "time_series_split",
-        "n_splits": 5,
-        "test_size": 0.2
+        "method": "temporal_split",
+        "train_years": (2010, 2021),
+        "val_years": (2022, 2023),
+        "test_years": (2024, 2024),
     },
-    
+
     "metrics": [
-        "mae", "mse", "rmse", "mape", "r2"
-    ]
+        "accuracy", "macro_f1", "weighted_f1",
+        "cohen_kappa", "log_loss", "roc_auc_ovr",
+    ],
+    "primary_metric": "macro_f1",
 }
 
 # Feature engineering configuration
