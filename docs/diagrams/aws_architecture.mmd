@@ -1,47 +1,42 @@
-%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '16px', 'lineColor': '#444', 'primaryColor': '#e3f2fd', 'primaryBorderColor': '#1565c0'}}}%%
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 16px
+    lineColor: '#444'
+    primaryColor: '#e3f2fd'
+    primaryBorderColor: '#1565c0'
+  layout: dagre
+  look: neo
+---
+flowchart TB
+ subgraph ECS["**ECS Fargate**"]
+    direction LR
+        TASK_API["API · FastAPI :8000"]
+        TASK_DASH["Dashboard · Streamlit :8501"]
+  end
+ subgraph AWS["AWS · us-east-1"]
+        ECS
+        ECR["**ECR**<br>dengue-api · dengue-dashboard"]
+        S3[("**S3** · dengue-mlops-data<br>parquet · modelo · GeoJSON")]
+        CW[("CloudWatch")]
+  end
+    DEV(("👨‍💻 Dev")) -- git tag + push --> REPO["GitHub · DengueMLOps"]
+    REPO -- on: push tags --> CI["**GitHub Actions** · deploy.yml<br>Build → Push ECR → Update ECS"]
+    CI -- docker push --> ECR
+    CI -- "update-service" --> ECS
+    ECR -- pull --> ECS
+    S3 -- entrypoint --> ECS
+    ECS -- logs --> CW
+    INET(("🌐 Internet")) -- HTTP · IP pública --> ECS
 
-flowchart LR
-    DEV(("👨‍💻 Dev")) -->|"git tag v1.0<br/>git push"| REPO["GitHub<br/>tfm-mlops"]
-    REPO -->|"on: push tags"| CI
-
-    subgraph CI["GitHub Actions · deploy.yml"]
-        direction TB
-        BUILD["Build images"] --> PUSH["Push ECR"] --> UPDATE["Update ECS"]
-    end
-
-    CI -->|"docker push"| ECR
-
-    subgraph AWS["AWS · us-east-1"]
-        direction TB
-
-        subgraph Storage["Almacenamiento"]
-            direction LR
-            ECR["ECR<br/>dengue-api<br/>dengue-dashboard"]
-            S3[("S3<br/>datos · modelo<br/>GeoJSON")]
-        end
-
-        subgraph ECS["ECS Fargate · dengue-cluster"]
-            direction LR
-            TASK_API["API<br/>FastAPI :8000"]
-            TASK_DASH["Dashboard<br/>Streamlit :8501"]
-        end
-
-        CW[("CloudWatch<br/>Logs")]
-
-        ECR -->|"pull"| ECS
-        S3 -->|"entrypoint"| ECS
-        ECS -->|"logs"| CW
-    end
-
-    INET(("🌐")) -->|"HTTP<br/>IP pública"| ECS
-
-    style DEV fill:#02576c,stroke:#024d5f,color:#fff,stroke-width:2px
-    style INET fill:#02576c,stroke:#024d5f,color:#fff,stroke-width:2px
-    style REPO fill:#f5f5f5,stroke:#333,stroke-width:2px,color:#000
-    style CI fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000
-    style AWS fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#000
-    style Storage fill:#fce4ec,stroke:#c62828,stroke-width:1px,color:#000
-    style ECR fill:#fce4ec,stroke:#c62828,stroke-width:2px,color:#000
+    TASK_API@{ shape: rect}
     style ECS fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000
+    style ECR fill:#fce4ec,stroke:#c62828,stroke-width:2px,color:#000
     style S3 fill:#fff9c4,stroke:#f9a825,stroke-width:2px,color:#000
     style CW fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px,color:#000
+    style DEV fill:#02576c,stroke:#024d5f,color:#fff,stroke-width:2px
+    style REPO fill:#f5f5f5,stroke:#333,stroke-width:2px,color:#000
+    style CI fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000
+    style INET fill:#02576c,stroke:#024d5f,color:#fff,stroke-width:2px
+    style AWS fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#000
