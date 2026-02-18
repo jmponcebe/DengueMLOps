@@ -3,10 +3,13 @@ FROM python:3.11-slim AS base
 
 WORKDIR /app
 
-# Deps del sistema
+# Deps del sistema + AWS CLI para descarga de modelo desde S3
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc libgomp1 curl && \
+    gcc libgomp1 curl unzip && \
     rm -rf /var/lib/apt/lists/*
+
+RUN curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip && \
+    unzip -q /tmp/awscliv2.zip -d /tmp && /tmp/aws/install && rm -rf /tmp/aws*
 
 # Deps de Python (cacheadas si no cambian)
 COPY requirements-prod.txt .
@@ -17,8 +20,9 @@ COPY src/ src/
 COPY app/ app/
 COPY configs/ configs/
 
-# Artefactos del modelo: se montan como volumen en docker-compose
-# Para deploy standalone (ECS), montar desde S3 o copiar en CI/CD
+# Entrypoint: descarga modelo desde S3 en ECS, o usa volumen local en docker-compose
+COPY scripts/api-entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 ENV PYTHONPATH=/app
 ENV MODEL_ARTIFACT_PATH=/app/mlflow-artifacts/models/m-81d328499d7d4eeaa187f9c052124f62/artifacts

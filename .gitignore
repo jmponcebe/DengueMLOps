@@ -183,8 +183,11 @@ data/external/**/*
 # Model artifacts
 models/**/*
 !models/.gitkeep
+!models/README.md
 
 # Monitoring outputs
+monitoring/drift_report.html
+monitoring/predictions_log.csv
 monitoring/reports/**/*
 !monitoring/reports/.gitkeep
 
@@ -207,6 +210,9 @@ Thumbs.db
 
 # Docker
 .dockerignore
+
+# AWS: Task definitions generadas dinámicamente durante deploy
+aws/*-live.json
 
 # Streamlit
 .streamlit/

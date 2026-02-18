@@ -3,8 +3,12 @@ FROM python:3.11-slim
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc libgomp1 && \
+    gcc libgomp1 curl unzip && \
     rm -rf /var/lib/apt/lists/*
+
+# AWS CLI para descargar datos desde S3 en ECS/Fargate
+RUN curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip && \
+    unzip -q /tmp/awscliv2.zip -d /tmp && /tmp/aws/install && rm -rf /tmp/aws*
 
 COPY requirements-prod.txt .
 RUN pip install --no-cache-dir -r requirements-prod.txt
@@ -14,13 +18,16 @@ COPY app/ app/
 COPY configs/ configs/
 
 # Artefactos y datos: se montan como volúmenes en docker-compose
-# Ver docker-compose.yml para los montajes
+# En ECS, los datos se descargan desde S3 via entrypoint
+COPY scripts/dashboard-entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 ENV PYTHONPATH=/app
 ENV API_URL=http://api:8000
 
 EXPOSE 8501
 
+# docker-compose sobreescribe CMD; en ECS usa el entrypoint con S3
 CMD ["streamlit", "run", "app/streamlit_app.py", \
      "--server.port=8501", "--server.address=0.0.0.0", \
      "--server.headless=true"]

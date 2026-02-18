@@ -1,0 +1,280 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Infraestructura para el proyecto MLOps Dengue Prediction.
+  Crea bucket S3 (datos + modelo), repositorios ECR, cluster ECS,
+  task definitions, servicios Fargate y security groups.
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC donde desplegar (usar la VPC por defecto del Learner Lab)
+
+  SubnetId:
+    Type: AWS::EC2::Subnet::Id
+    Description: Subnet pública con acceso a internet
+
+  ExecutionRoleArn:
+    Type: String
+    Description: ARN del rol de ejecución (LabRole en Learner Lab)
+    Default: ''
+
+  ApiImageUri:
+    Type: String
+    Description: URI de la imagen Docker de la API en ECR
+    Default: ''
+
+  DashboardImageUri:
+    Type: String
+    Description: URI de la imagen Docker del dashboard en ECR
+    Default: ''
+
+Conditions:
+  HasImages: !Not [!Equals [!Ref ApiImageUri, '']]
+
+Resources:
+
+  # ============================================================
+  # S3 — Bucket para datos (parquet, GeoJSON) y modelo champion
+  # ============================================================
+
+  DataBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub 'dengue-mlops-data-${AWS::AccountId}'
+      LifecycleConfiguration:
+        Rules:
+          - Id: CleanupOldVersions
+            Status: Enabled
+            NoncurrentVersionExpirationInDays: 7
+
+  # ============================================================
+  # ECR — Repositorios de imágenes Docker
+  # ============================================================
+
+  ECRRepoApi:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: dengue-api
+      ImageScanningConfiguration:
+        ScanOnPush: false
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep only 5 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 5
+                },
+                "action": { "type": "expire" }
+              }
+            ]
+          }
+
+  ECRRepoDashboard:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: dengue-dashboard
+      ImageScanningConfiguration:
+        ScanOnPush: false
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep only 5 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 5
+                },
+                "action": { "type": "expire" }
+              }
+            ]
+          }
+
+  # ============================================================
+  # Security Group — Puertos API (8000) y Dashboard (8501)
+  # ============================================================
+
+  DengueSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Dengue MLOps services
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8000
+          ToPort: 8000
+          CidrIp: 0.0.0.0/0
+          Description: FastAPI
+        - IpProtocol: tcp
+          FromPort: 8501
+          ToPort: 8501
+          CidrIp: 0.0.0.0/0
+          Description: Streamlit
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+          Description: SSH (EC2)
+      Tags:
+        - Key: Name
+          Value: dengue-mlops-sg
+
+  # ============================================================
+  # CloudWatch Log Groups
+  # ============================================================
+
+  LogGroupApi:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /ecs/dengue-api
+      RetentionInDays: 7
+
+  LogGroupDashboard:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /ecs/dengue-dashboard
+      RetentionInDays: 7
+
+  # ============================================================
+  # ECS — Cluster y Task Definitions
+  # ============================================================
+
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: dengue-cluster
+
+  TaskDefApi:
+    Type: AWS::ECS::TaskDefinition
+    Condition: HasImages
+    Properties:
+      Family: dengue-api
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      Cpu: '512'
+      Memory: '1024'
+      ExecutionRoleArn: !Ref ExecutionRoleArn
+      TaskRoleArn: !Ref ExecutionRoleArn
+      ContainerDefinitions:
+        - Name: dengue-api
+          Image: !Ref ApiImageUri
+          Command: ['/bin/bash', '/app/entrypoint.sh']
+          PortMappings:
+            - ContainerPort: 8000
+              Protocol: tcp
+          Essential: true
+          Environment:
+            - Name: S3_DATA_BUCKET
+              Value: !Ref DataBucket
+            - Name: AWS_DEFAULT_REGION
+              Value: !Ref AWS::Region
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroupApi
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: ecs
+
+  TaskDefDashboard:
+    Type: AWS::ECS::TaskDefinition
+    Condition: HasImages
+    Properties:
+      Family: dengue-dashboard
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      Cpu: '512'
+      Memory: '1024'
+      ExecutionRoleArn: !Ref ExecutionRoleArn
+      TaskRoleArn: !Ref ExecutionRoleArn
+      ContainerDefinitions:
+        - Name: dengue-dashboard
+          Image: !Ref DashboardImageUri
+          Command: ['/bin/bash', '/app/entrypoint.sh']
+          PortMappings:
+            - ContainerPort: 8501
+              Protocol: tcp
+          Essential: true
+          Environment:
+            - Name: API_URL
+              Value: 'http://localhost:8000'  # Se actualiza post-deploy con IP real
+            - Name: S3_DATA_BUCKET
+              Value: !Ref DataBucket
+            - Name: AWS_DEFAULT_REGION
+              Value: !Ref AWS::Region
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroupDashboard
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: ecs
+
+  # ============================================================
+  # ECS — Servicios Fargate
+  # ============================================================
+
+  ServiceApi:
+    Type: AWS::ECS::Service
+    Condition: HasImages
+    Properties:
+      Cluster: !Ref ECSCluster
+      ServiceName: dengue-api-service
+      TaskDefinition: !Ref TaskDefApi
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets: [!Ref SubnetId]
+          SecurityGroups: [!Ref DengueSG]
+          AssignPublicIp: ENABLED
+
+  ServiceDashboard:
+    Type: AWS::ECS::Service
+    Condition: HasImages
+    Properties:
+      Cluster: !Ref ECSCluster
+      ServiceName: dengue-dashboard-service
+      TaskDefinition: !Ref TaskDefDashboard
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets: [!Ref SubnetId]
+          SecurityGroups: [!Ref DengueSG]
+          AssignPublicIp: ENABLED
+
+# ============================================================
+# Outputs
+# ============================================================
+
+Outputs:
+  ECRRepoApiUri:
+    Description: URI del repositorio ECR de la API
+    Value: !GetAtt ECRRepoApi.RepositoryUri
+
+  ECRRepoDashboardUri:
+    Description: URI del repositorio ECR del dashboard
+    Value: !GetAtt ECRRepoDashboard.RepositoryUri
+
+  SecurityGroupId:
+    Description: ID del Security Group
+    Value: !Ref DengueSG
+
+  ClusterName:
+    Description: Nombre del cluster ECS
+    Value: !Ref ECSCluster
+
+  ClusterArn:
+    Description: ARN del cluster ECS
+    Value: !GetAtt ECSCluster.Arn
+
+  DataBucketName:
+    Description: Nombre del bucket S3 para datos y modelo
+    Value: !Ref DataBucket
