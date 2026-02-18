@@ -15,6 +15,8 @@ flowchart TB
     subgraph AWS["AWS · us-east-1"]
         direction TB
 
+        S3[("S3<br/>dengue-mlops-data<br/>parquet · modelo · GeoJSON")]
+
         subgraph ECR["ECR · Container Registry"]
             ECR_API["dengue-api"]
             ECR_DASH["dengue-dashboard"]
@@ -28,16 +30,16 @@ flowchart TB
             TASK_DASH["Task Dashboard<br/>Streamlit :8501"]
         end
 
-        ALB["ALB<br/>Load Balancer<br/>:80 / :443"]
+        S3 -->|"entrypoint<br/>modelo"| TASK_API
+        S3 -->|"entrypoint<br/>datos + GeoJSON"| TASK_DASH
         CW[("CloudWatch<br/>Logs")]
 
-        ALB -->|"ruteo"| TASK_API
-        ALB -->|"ruteo"| TASK_DASH
         TASK_API -->|"logs"| CW
         TASK_DASH -->|"logs"| CW
     end
 
-    INET(("🌐 Internet")) -->|"HTTPS"| ALB
+    INET(("🌐 Internet")) -->|"HTTP<br/>IP pública"| TASK_API
+    INET -->|"HTTP<br/>IP pública"| TASK_DASH
 
     style DEV fill:#02576c,stroke:#024d5f,color:#fff,stroke-width:2px
     style INET fill:#02576c,stroke:#024d5f,color:#fff,stroke-width:2px
@@ -46,5 +48,5 @@ flowchart TB
     style AWS fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#000
     style ECR fill:#fce4ec,stroke:#c62828,stroke-width:2px,color:#000
     style ECS fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000
-    style ALB fill:#02576c,stroke:#024d5f,color:#fff,stroke-width:2px
+    style S3 fill:#fff9c4,stroke:#f9a825,stroke-width:2px,color:#000
     style CW fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px,color:#000
