@@ -9,6 +9,7 @@
 [![Docker](https://img.shields.io/badge/deploy-Docker-2496ED.svg)](https://www.docker.com/)
 [![AWS](https://img.shields.io/badge/cloud-AWS-FF9900.svg)](https://aws.amazon.com/)
 [![Evidently](https://img.shields.io/badge/monitoring-Evidently-6C3EC2.svg)](https://www.evidentlyai.com/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 Production-grade ML pipeline that predicts **dengue alert levels** (1-4) across 5,500+ Brazilian municipalities using only non-leaking epidemiological features. Built as a showcase of modern MLOps practices: experiment tracking, model serving, containerization, CI/CD, cloud deployment, and data drift monitoring.
 
@@ -245,7 +246,9 @@ Git tag v* → CD (build images → push to ECR → update ECS services)
 
 ## License
 
-This project was developed as a Master's Thesis at the [CIDaeN](https://cidaen.uclm.es/), Universidad de Castilla-La Mancha (UCLM).
+This project is licensed under the [MIT License](LICENSE).
+
+Developed as a Master's Thesis at [CIDaeN](https://cidaen.uclm.es/), Universidad de Castilla-La Mancha (UCLM).
 
 ---
 
