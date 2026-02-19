@@ -20,7 +20,7 @@ Production-grade ML pipeline that predicts **dengue alert levels** (1-4) across 
 ## Highlights
 
 | What | How |
-|---|---|
+| --- | --- |
 | **Data** | 4.5M weekly records (2010-2025) from [Mosqlimate API](https://api.mosqlimate.org/) |
 | **Features** | 15 engineered features, zero target leakage, climate lags based on vector biology |
 | **Model** | XGBoost + balanced weights, Optuna-tuned (40 trials). macro_f1=0.39 on 2024 test |
@@ -37,16 +37,19 @@ Production-grade ML pipeline that predicts **dengue alert levels** (1-4) across 
 ## Demo
 
 ### Streamlit Dashboard — Brazil Alert Map
+
 <p align="center">
   <img src="docs/images/streamlit_dashboard.png" alt="Streamlit Dashboard" width="700">
 </p>
 
 ### FastAPI — Auto-generated Swagger Docs
+
 <p align="center">
   <img src="docs/images/swagger_ui.png" alt="Swagger UI" width="700">
 </p>
 
 ### MLflow — Experiment Tracking
+
 <p align="center">
   <img src="docs/images/mlflow_experiments.png" alt="MLflow Experiments" width="700">
 </p>
@@ -56,11 +59,13 @@ Production-grade ML pipeline that predicts **dengue alert levels** (1-4) across 
 ## Architecture
 
 ### Docker Compose
+
 <p align="center">
   <img src="docs/images/architecture_docker.png" alt="Docker Architecture" width="700">
 </p>
 
 ### AWS Deployment (ECS/Fargate)
+
 <p align="center">
   <img src="docs/images/architecture_aws.png" alt="AWS Architecture" width="700">
 </p>
@@ -70,6 +75,7 @@ Production-grade ML pipeline that predicts **dengue alert levels** (1-4) across 
 ## Quick Start
 
 ### Prerequisites
+
 - Python 3.11+
 - Docker & Docker Compose (for containerized deployment)
 
@@ -112,7 +118,7 @@ pytest tests/ -v --cov=src
 
 ## Project Structure
 
-```
+```text
 ├── app/                     # Deployment
 │   ├── api.py               # FastAPI REST API (5 endpoints)
 │   ├── schemas.py           # Pydantic models for validation
@@ -145,7 +151,7 @@ pytest tests/ -v --cov=src
 5 sequential experiments, each building on the previous one's insights:
 
 | # | Experiment | Runs | Key Finding |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 01 | baselines | 4 | Floor: macro_f1=0.23 (dummy) |
 | 02 | model-selection | 5 | Algorithm choice barely matters with imbalanced data |
 | 03 | hyperparameter-tuning | 2+80 | Optuna + nested runs, minimal improvement |
@@ -159,6 +165,7 @@ Key insight: **class imbalance handling** (balanced sample weights) has far more
 The biggest challenge: dengue datasets contain epidemiological variables (cases, Rt, incidence) that are **derived from the target**. Using them produces artificially inflated metrics.
 
 Our 15 production features use **only** temporal, climate (with biological lag), and geographic information:
+
 - Climate variables lagged 4-8 weeks (matching the vector lifecycle: egg → adult → bite → diagnosis)
 - `shift(1)` before `rolling()` to prevent current-observation leakage
 - Region encoding via domain knowledge (5 Brazilian macro-regions), not target encoding
@@ -171,7 +178,7 @@ Our 15 production features use **only** temporal, climate (with biological lag),
 
 ### CI/CD Pipeline
 
-```
+```text
 Push to main → CI (test → lint → docker build + smoke test)
 Git tag v* → CD (build images → push to ECR → update ECS services)
 ```
@@ -194,7 +201,7 @@ Git tag v* → CD (build images → push to ECR → update ECS services)
 ## Key Technical Decisions
 
 | Decision | Rationale |
-|---|---|
+| --- | --- |
 | Separate API and Dashboard images | Independent scaling (API is CPU-bound, Dashboard is I/O-bound) |
 | Climate lags 4-8 weeks | Matches vector biology cycle (egg → adult → transmission → diagnosis) |
 | `pop_log` as top feature | Dengue is fundamentally urban; population captures density and vector habitats |
@@ -207,7 +214,7 @@ Git tag v* → CD (build images → push to ECR → update ECS services)
 ## Tech Stack
 
 | Category | Technologies |
-|---|---|
+| --- | --- |
 | **Core** | Python 3.13, Pandas, NumPy, Scikit-learn |
 | **ML** | XGBoost, Optuna, SHAP |
 | **MLOps** | MLflow (tracking + registry + evaluate), Evidently |
@@ -221,7 +228,7 @@ Git tag v* → CD (build images → push to ECR → update ECS services)
 ## Data
 
 | Aspect | Detail |
-|---|---|
+| --- | --- |
 | **Source** | [Mosqlimate API](https://api.mosqlimate.org/) — epidemiological + climate data |
 | **Volume** | 4.5M weekly records, 5,500+ municipalities |
 | **Period** | 2010-2025 |
@@ -235,7 +242,7 @@ Git tag v* → CD (build images → push to ECR → update ECS services)
 ## API Endpoints
 
 | Method | Endpoint | Description |
-|---|---|---|
+| --- | --- | --- |
 | `GET` | `/health` | Health check for Docker/load balancers |
 | `GET` | `/model/info` | Loaded model metadata |
 | `POST` | `/predict` | Single prediction (15 features → alert level + probabilities) |
