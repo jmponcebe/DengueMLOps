@@ -1,184 +1,94 @@
-# Predicción de Dengue en Brasil - Proyecto MLOps para TFM
+# 🦟 DengueMLOps — End-to-End MLOps Pipeline for Dengue Alert Prediction
 
-## Descripción del Proyecto
+[![CI](https://github.com/jmponcebe/DengueMLOps/actions/workflows/ci.yml/badge.svg)](https://github.com/jmponcebe/DengueMLOps/actions/workflows/ci.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+[![XGBoost](https://img.shields.io/badge/model-XGBoost-orange.svg)](https://xgboost.readthedocs.io/)
+[![MLflow](https://img.shields.io/badge/tracking-MLflow-0194E2.svg)](https://mlflow.org/)
+[![Docker](https://img.shields.io/badge/deploy-Docker-2496ED.svg)](https://www.docker.com/)
+[![AWS](https://img.shields.io/badge/cloud-AWS-FF9900.svg)](https://aws.amazon.com/)
 
-Pipeline MLOps completo para la predicción del nivel de alerta de dengue por municipio en Brasil, desarrollado como Trabajo de Fin de Máster (TFM). Utiliza datos históricos (2010-2025) de la API mosqlimate y variables climáticas para generar predicciones a nivel municipal respetando restricciones epidemiológicas reales.
+Production-grade ML pipeline that predicts **dengue alert levels** (1-4) across 5,500+ Brazilian municipalities using only non-leaking epidemiological features. Built as a showcase of modern MLOps practices: experiment tracking, model serving, containerization, CI/CD, cloud deployment, and data drift monitoring.
 
-## Objetivos
+> **Master's Thesis Project** — CIDaeN, Universidad de Castilla-La Mancha (UCLM)
 
-- **Pipeline MLOps completo**: Desde ingesta de datos hasta monitoreo en producción
-- **Predicción sin leakage**: Solo variables disponibles en tiempo real de predicción
-- **Visualización interactiva**: App Streamlit con mapa de Brasil
-- **Monitoreo de calidad**: Detección de data drift con Evidently
-- **Experimentación**: Tracking completo con MLflow
+---
 
-## Arquitectura del Proyecto
+## Highlights
 
-```text
-tfm-mlops/
-├── data/                        # Gestión de datos
-│   ├── raw/                     # Datos originales (parquet jerárquico)
-│   ├── interim/                 # Datos intermedios y resúmenes del EDA
-│   ├── processed/               # Datasets finales para modelado
-│   └── external/                # Datos de terceros (shapefiles, etc.)
-├── notebooks/                   # Jupyter notebooks de exploración
-│   ├── 01-exploratory-data-analysis.ipynb
-│   ├── 02-feature-engineering.ipynb
-│   └── 03-modeling.ipynb
-├── src/                         # Código de producción
-│   ├── data/                    # Ingesta y procesamiento
-│   │   ├── api_client.py        # Cliente API mosqlimate (sync_dataset)
-│   │   └── mosqlimate_loader.py # Lectura de parquet local
-│   ├── features/                # Feature engineering
-│   │   ├── constants.py         # Clasificación de variables y constantes
-│   │   └── feature_engineer.py  # Pipeline DengueFeatureEngineer
-│   ├── models/                  # Entrenamiento y evaluación
-│   │   ├── constants.py         # Label maps, clases, balanced weights
-│   │   ├── evaluation.py        # Métricas, confusion matrix, reports
-│   │   └── trainer.py           # DengueModelTrainer con MLflow logging
-│   └── monitoring/              # Monitoreo y alertas
-├── app/                         # Aplicación Streamlit y API
-├── models/                      # Modelos entrenados y artefactos
-├── monitoring/                  # Reportes de monitoreo
-├── docs/                        # Documentación técnica y académica
-│   └── memoria/                 # Memoria TFM (LaTeX, CIDaeN UCLM)
-├── tests/                       # Tests unitarios
-│   ├── test_data_api.py         # Tests del cliente API
-│   └── test_features.py         # Tests de feature engineering (26 tests)
-└── configs/                     # Archivos de configuración
+| What | How |
+|---|---|
+| **Data** | 4.5M weekly records (2010-2025) from [Mosqlimate API](https://api.mosqlimate.org/) |
+| **Features** | 15 engineered features, zero target leakage, climate lags based on vector biology |
+| **Model** | XGBoost + balanced weights, Optuna-tuned (40 trials). macro_f1=0.39 on 2024 test |
+| **Tracking** | 5 MLflow experiments, 90+ runs, Model Registry with champion alias |
+| **Serving** | FastAPI REST API + Streamlit dashboard with interactive Brazil choropleth map |
+| **Containers** | Multi-image Docker setup, Compose orchestration with health checks |
+| **CI/CD** | GitHub Actions — tests/lint on push, deploy to AWS ECR/ECS on version tags |
+| **Cloud** | AWS ECS/Fargate + S3 + ECR, Infrastructure as Code (CloudFormation) |
+| **Monitoring** | Evidently data drift detection, prediction logging with auto-flush |
+| **Tests** | 88 unit tests, 97% coverage on feature engineering |
+
+---
+
+## Architecture
+
+```
+┌─────────────┐     ┌─────────────────┐     ┌──────────────┐
+│  Mosqlimate  │────▶│  Feature Engine  │────▶│   XGBoost    │
+│    API       │     │  (15 features)   │     │  (champion)  │
+└─────────────┘     └─────────────────┘     └──────┬───────┘
+                                                    │
+                    ┌───────────────────────────────┘
+                    ▼
+    ┌──────────────────────────────────────────┐
+    │            Docker Compose                 │
+    │  ┌─────────────┐   ┌──────────────────┐  │
+    │  │  FastAPI     │   │   Streamlit      │  │
+    │  │  :8000       │◀──│   :8501          │  │
+    │  │  /predict    │   │   Mapa + Pred    │  │
+    │  └──────┬───────┘   └──────────────────┘  │
+    │         │                                  │
+    │  ┌──────▼───────┐                          │
+    │  │  Evidently   │                          │
+    │  │  Drift Det.  │                          │
+    │  └──────────────┘                          │
+    └──────────────────────────────────────────┘
+                    │
+    ┌───────────────▼──────────────────────┐
+    │          AWS (ECS/Fargate)            │
+    │   S3 (data/model) + ECR (images)     │
+    │   CloudFormation IaC                 │
+    └──────────────────────────────────────┘
 ```
 
-## Estado Actual del Proyecto
+---
 
-### Fase 1: Datos y Exploración — Completada
+## Quick Start
 
-- **Ingesta**: Cliente API mosqlimate + loader de parquet local (27 estados, 2010-2025)
-- **EDA**: Análisis completo con 4.3M registros, 5,563 municipios
-- **Hallazgos clave**:
-  - Estacionalidad marcada: pico Mar-Abr, valle Sep (ratio 9.9x)
-  - Desbalance extremo del target: 93.1% nivel 1 (verde)
-  - Heterogeneidad regional significativa entre estados
-  - Clima opera con 4-8 semanas de lag sobre transmisión vectorial
+### Prerequisites
+- Python 3.11+
+- Docker & Docker Compose (for containerized deployment)
 
-### Fase 2: Feature Engineering — Completada
-
-- **15 features engineered** sin target leakage:
-  - Temporales (6): encoding cíclico de mes/SE, indicador temporada pico, trimestre
-  - Climáticas (4): lags 4-8 semanas, rolling means con shift, interacciones temp×humedad
-  - Geográficas (5): log población, macro-región brasileña (one-hot 5 regiones)
-- **Principios aplicados**:
-  - `shift()` antes de `rolling()` para evitar leakage temporal
-  - Region encoding por conocimiento de dominio (no target encoding)
-  - Variables epidemiológicas y clima simultáneo eliminados de producción
-- **Validación con modelo**: RF baseline vs RF+FE en validación temporal
-- **Módulo productivo**: `src/features/` con 26 tests unitarios (97% cobertura)
-- **Datasets de producción**: 25 columnas (9 ID + 15 features + target)
-
-### Fase 3: Modelado — Completada
-
-- **5 experimentos MLflow** organizados por fase (baselines → evaluación final)
-- **Baselines**: Dummy, Logistic Regression, Decision Tree (macro_f1 ~0.23-0.32)
-- **Model Selection**: RF, XGBoost, LightGBM, CatBoost por defecto (~0.27)
-- **HP Tuning con Optuna**: 40 trials para XGBoost y LightGBM con nested runs, subsample 15%
-- **Class imbalance**: Balanced sample weights (macro_f1 0.27→0.38) y custom weights para salud pública
-- **Champion model**: XGBoost + balanced weights + Optuna HP → macro_f1=0.39, kappa=0.33 en test 2024
-- **MLflow avanzado**: Model Registry con alias "champion", dataset lineage, mlflow.evaluate(), SHAP
-- **Interpretabilidad**: SHAP TreeExplainer — `pop_log` y `month_sin` son los features más importantes
-- **Módulo productivo**: `src/models/` con constants, evaluation y trainer
-
-### Fase 4: Deployment y Monitoreo — Completada
-
-- **API REST** (FastAPI): endpoints `/predict`, `/predict/batch`, `/health`, `/model/info`
-- **Streamlit Dashboard**: 4 páginas — mapa choropleth de Brasil por UF, predicción individual, info del modelo, monitoreo
-- **Mapa de alerta**: Visualización geoespacial con datos reales por semana epidemiológica, 3 métodos de agregación, detalle municipal
-- **Monitoreo**: DriftDetector con Evidently (DataDriftPreset, DataSummaryPreset), logging de predicciones a CSV
-- **Docker**: Multi-imagen (API + Dashboard), docker-compose con healthchecks y volúmenes
-- **CI/CD**: GitHub Actions — tests/lint en push, deploy a AWS ECR/ECS en tags
-- **AWS**: Guía de despliegue para EC2 y ECS/Fargate con Learner Lab
-
-### Fase 5: Memoria TFM — Completada
-
-- **Plantilla**: CIDaeN UCLM, compilación con XeLaTeX + BibTeX
-- **Estructura MLOps-focused** (5 capítulos + 2 apéndices):
-  - Cap 1: Introducción (motivación MLOps, objetivos, estructura)
-  - Cap 2: Fundamentos (ML, MLOps, dengue en Brasil)
-  - Cap 3: Metodología y Desarrollo (datos, features, MLflow, serving, Docker, CI/CD, AWS, monitoreo)
-  - Cap 4: Resultados (métricas, trazabilidad MLflow, sistema desplegado, pipeline CI/CD, AWS, monitoreo)
-  - Cap 5: Conclusiones y Trabajo Futuro
-  - Apéndice A: Stack tecnológico (23 herramientas con versiones)
-  - Apéndice B: Anexo técnico (19 fragmentos de código)
-- **Bibliografía**: 18 referencias (epidemiología, ML, MLOps, frameworks)
-- **Capturas incluidas**: MLflow (6 screenshots), Swagger UI, Streamlit (mapa + predicción + monitoreo), Docker Compose, pytest + cobertura, GitHub Actions (CI + CD), AWS (ECR, EC2, ECS), confession matrix, Evidently drift report
-- **3 diagramas propios**: Ciclo vectorial dengue, arquitectura Docker, arquitectura AWS
-
-## Datos
-
-### Fuentes
-
-- **Dengue**: API mosqlimate (2010-2025), estructura jerárquica `uf={estado}/year={año}/`
-- **Clima**: Variables meteorológicas por municipio (temperatura, humedad)
-
-### Target
-
-- `nivel`: Nivel de alerta epidemiológica (1-4)
-  - Nivel 1 (verde): 93.1% — Sin alerta
-  - Nivel 2 (amarillo): 3.9% — Atenção
-  - Nivel 3 (naranja): 0.2% — Alerta
-  - Nivel 4 (rojo): 2.8% — Alerta crítico
-
-### Splits Temporales
-
-- **Train**: 2010-2021 (3.48M registros)
-- **Validation**: 2022-2023 (584K registros)
-- **Test**: 2024 (290K registros)
-
-## Uso Rápido
-
-### Instalación
+### Installation
 
 ```bash
-git clone <repo-url>
-cd tfm-mlops
+git clone https://github.com/jmponcebe/DengueMLOps.git
+cd DengueMLOps
 python -m venv .venv
-.venv\Scripts\activate  # Linux: source .venv/bin/activate
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### Configurar variables de entorno
-
-```bash
-# Copiar el ejemplo y rellenar con valores reales
-cp .env.example .env
-# Variables principales: MOSQLIMATE_API_KEY, AWS_ACCESS_KEY_ID, etc.
-```
-
-### Sincronizar datos
-
-```python
-from src.data import sync_dataset
-sync_dataset(year_start=2010)
-```
-
-### Feature engineering
-
-```python
-from src.features import DengueFeatureEngineer
-import pandas as pd
-
-df = pd.read_parquet('data/processed/dengue_train_2010_2021.parquet')
-fe = DengueFeatureEngineer()
-df_full = fe.transform(df)
-df_prod = fe.get_production_dataset(df_full)
-```
-
-### Levantar API + Dashboard (Docker)
+### Run with Docker (recommended)
 
 ```bash
 docker compose up --build
-# API: http://localhost:8000  |  Dashboard: http://localhost:8501
+# API:       http://localhost:8000
+# Dashboard: http://localhost:8501
+# Swagger:   http://localhost:8000/docs
 ```
 
-### Levantar API + Dashboard (local)
+### Run locally
 
 ```bash
 # Terminal 1: API
@@ -188,26 +98,152 @@ uvicorn app.api:app --host 0.0.0.0 --port 8000
 streamlit run app/streamlit_app.py
 ```
 
-### Tests
+### Run tests
 
 ```bash
-pytest tests/ -v
+pytest tests/ -v --cov=src
 ```
-
-## Tecnologías
-
-- **Core**: Python 3.13, Pandas 2.3, NumPy 2.3, Scikit-learn 1.7
-- **ML**: XGBoost 3.0, Optuna 4.5, SHAP 0.50
-- **MLOps**: MLflow 3.3 (tracking, registry, evaluate), Evidently 0.7
-- **App**: Streamlit 1.49, FastAPI 0.116, Pydantic 2.11
-- **Viz**: Plotly 6.3, Matplotlib, Seaborn
-- **Testing**: Pytest 8.4 (con cobertura)
-- **Infra**: Docker 28.2, Docker Compose 2.37, GitHub Actions
-- **Cloud**: AWS ECR/ECS/Fargate/EC2
-- **Thesis**: LaTeX (XeLaTeX), BibTeX, MiKTeX
 
 ---
 
-## Última actualización
+## Project Structure
 
-Febrero 2026
+```
+├── app/                     # Deployment
+│   ├── api.py               # FastAPI REST API (5 endpoints)
+│   ├── schemas.py           # Pydantic models for validation
+│   └── streamlit_app.py     # Interactive dashboard (4 pages)
+├── src/                     # Production code
+│   ├── data/                # Ingestion (API client + Parquet loader)
+│   ├── features/            # DengueFeatureEngineer (15 features, anti-leakage)
+│   ├── models/              # Training, evaluation, MLflow integration
+│   └── monitoring/          # Evidently drift detection
+├── notebooks/               # Exploration & experimentation
+│   ├── 01-exploratory-data-analysis.ipynb
+│   ├── 02-feature-engineering.ipynb
+│   └── 03-modeling.ipynb
+├── configs/                 # MLflow & project configuration
+├── tests/                   # 88 unit tests
+├── scripts/                 # AWS deploy & entrypoint scripts
+├── aws/                     # CloudFormation IaC template
+├── .github/workflows/       # CI/CD pipelines
+├── Dockerfile.api           # API container
+├── Dockerfile.dashboard     # Dashboard container
+└── docker-compose.yml       # Multi-service orchestration
+```
+
+---
+
+## MLOps Practices
+
+### Experiment Tracking (MLflow)
+
+5 sequential experiments, each building on the previous one's insights:
+
+| # | Experiment | Runs | Key Finding |
+|---|---|---|---|
+| 01 | baselines | 4 | Floor: macro_f1=0.23 (dummy) |
+| 02 | model-selection | 5 | Algorithm choice barely matters with imbalanced data |
+| 03 | hyperparameter-tuning | 2+80 | Optuna + nested runs, minimal improvement |
+| 04 | class-imbalance | 2 | **Balanced weights: +38% macro_f1** (the breakthrough) |
+| 05 | final-evaluation | 3 | Champion on held-out 2024 test data |
+
+Key insight: **class imbalance handling** (balanced sample weights) has far more impact than algorithm selection or hyperparameter tuning when dealing with 460:1 class ratios.
+
+### Feature Engineering (Zero Leakage)
+
+The biggest challenge: dengue datasets contain epidemiological variables (cases, Rt, incidence) that are **derived from the target**. Using them produces artificially inflated metrics.
+
+Our 15 production features use **only** temporal, climate (with biological lag), and geographic information:
+- Climate variables lagged 4-8 weeks (matching the vector lifecycle: egg → adult → bite → diagnosis)
+- `shift(1)` before `rolling()` to prevent current-observation leakage
+- Region encoding via domain knowledge (5 Brazilian macro-regions), not target encoding
+
+### Model Serving
+
+- **FastAPI** REST API with Pydantic validation, auto-generated OpenAPI docs
+- **Resilient loading**: MLflow Registry → local artifact fallback
+- **Streamlit** dashboard with Brazil choropleth map (Plotly + IBGE GeoJSON)
+
+### CI/CD Pipeline
+
+```
+Push to main → CI (test → lint → docker build + smoke test)
+Git tag v* → CD (build images → push to ECR → update ECS services)
+```
+
+### Monitoring
+
+- Evidently batch drift detection (KS test for numerical, chi² for categorical)
+- Prediction logging with auto-flush buffer (100 predictions → CSV)
+- Interactive drift reports accessible from the Streamlit dashboard
+
+### Cloud Deployment (AWS)
+
+- **Infrastructure as Code**: CloudFormation template for S3 + ECR + ECS/Fargate
+- **Two deployment options**: EC2 (simple/cheap) and ECS/Fargate (scalable/managed)
+- **Data separation**: Images don't contain data — containers download from S3 at startup
+- **Automated setup**: 4-phase script (stack → S3 upload → ECR push → ECS services)
+
+---
+
+## Key Technical Decisions
+
+| Decision | Rationale |
+|---|---|
+| Separate API and Dashboard images | Independent scaling (API is CPU-bound, Dashboard is I/O-bound) |
+| Climate lags 4-8 weeks | Matches vector biology cycle (egg → adult → transmission → diagnosis) |
+| `pop_log` as top feature | Dengue is fundamentally urban; population captures density and vector habitats |
+| Balanced sample weights | With 93.1% class 1, models without weighting ignore minority alerts |
+| Temporal train/val/test split | Respects time ordering; 2024 as test (record dengue year in Brazil) |
+| MLflow champion alias | API loads model by alias, decoupled from specific run IDs |
+
+---
+
+## Tech Stack
+
+| Category | Technologies |
+|---|---|
+| **Core** | Python 3.13, Pandas, NumPy, Scikit-learn |
+| **ML** | XGBoost, Optuna, SHAP |
+| **MLOps** | MLflow (tracking + registry + evaluate), Evidently |
+| **App** | FastAPI, Streamlit, Pydantic, Plotly |
+| **Testing** | Pytest (88 tests, 97% coverage on features) |
+| **Infra** | Docker, Docker Compose, GitHub Actions |
+| **Cloud** | AWS S3, ECR, ECS/Fargate, CloudFormation |
+
+---
+
+## Data
+
+| Aspect | Detail |
+|---|---|
+| **Source** | [Mosqlimate API](https://api.mosqlimate.org/) — epidemiological + climate data |
+| **Volume** | 4.5M weekly records, 5,500+ municipalities |
+| **Period** | 2010-2025 |
+| **Target** | Alert level 1-4 (93.1% level 1 — extreme imbalance) |
+| **Train** | 2010-2021 (3.48M records) |
+| **Validation** | 2022-2023 (584K records) |
+| **Test** | 2024 (290K records) — record dengue year in Brazil |
+
+---
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/health` | Health check for Docker/load balancers |
+| `GET` | `/model/info` | Loaded model metadata |
+| `POST` | `/predict` | Single prediction (15 features → alert level + probabilities) |
+| `POST` | `/predict/batch` | Batch prediction |
+| `POST` | `/monitoring/flush` | Force prediction buffer flush to CSV |
+
+---
+
+## License
+
+This project was developed as a Master's Thesis at the [CIDaeN](https://cidaen.uclm.es/), Universidad de Castilla-La Mancha (UCLM).
+
+---
+
+*Built by [Jose María Ponce Bernabé](https://github.com/jmponcebe) — 2025*
