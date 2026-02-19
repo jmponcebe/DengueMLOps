@@ -269,6 +269,21 @@ Git tag v* → CD (build imágenes → push a ECR → actualizar servicios ECS)
 
 ---
 
+## Monitoreo
+
+El proyecto incluye detección de data drift con [Evidently](https://www.evidentlyai.com/). Para generar un reporte de demo:
+
+```bash
+python scripts/monitoring_demo.py              # Usa datos reales si están disponibles, si no sintéticos
+python scripts/monitoring_demo.py --simulate   # Forzar datos sintéticos con drift artificial
+```
+
+Con datos históricos (`setup_data.py --all`), la demo usa datos de entrenamiento (2010-2021) como referencia y datos recientes (2023+) como producción. Sin datos, genera features sintéticas con drift configurable.
+
+El reporte generado se puede ver en el dashboard de Streamlit (pestaña "Monitoreo") o directamente como archivo HTML en `monitoring/reports/`.
+
+---
+
 ## Hoja de Ruta
 
 - [ ] **Integración DVC** — Versionar datos y artefactos de modelo con [DVC](https://dvc.org/) para reproducibilidad completa (`dvc pull` para obtener todo)
@@ -289,4 +304,4 @@ Desarrollado como Trabajo de Fin de Máster en el [CIDaeN](https://cidaen.uclm.e
 
 ---
 
-*Desarrollado por [Jose María Ponce Bernabé](https://github.com/jmponcebe) — 2025*
+*Desarrollado por [Jose María Ponce Bernabé](https://github.com/jmponcebe) — 2026*

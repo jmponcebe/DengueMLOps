@@ -268,7 +268,20 @@ Git tag v* → CD (build imagens → push para ECR → atualizar serviços ECS)
 | `POST` | `/monitoring/flush` | Forçar flush do buffer de previsões para CSV |
 
 ---
+## Monitoramento
 
+O projeto inclui detecção de data drift com [Evidently](https://www.evidentlyai.com/). Para gerar um relatório de demo:
+
+```bash
+python scripts/monitoring_demo.py              # Usa dados reais se disponíveis, senão sintéticos
+python scripts/monitoring_demo.py --simulate   # Forçar dados sintéticos com drift artificial
+```
+
+Com dados históricos (`setup_data.py --all`), a demo usa dados de treino (2010-2021) como referência e dados recentes (2023+) como produção. Sem dados, gera features sintéticas com drift configurável.
+
+O relatório gerado pode ser visto no dashboard Streamlit (aba "Monitoreo") ou diretamente como arquivo HTML em `monitoring/reports/`.
+
+---
 ## Roteiro
 
 - [ ] **Integração DVC** — Versionar dados e artefatos de modelo com [DVC](https://dvc.org/) para reprodutibilidade completa (`dvc pull` para obter tudo)
@@ -289,4 +302,4 @@ Desenvolvido como Trabalho de Conclusão de Mestrado no [CIDaeN](https://cidaen.
 
 ---
 
-*Desenvolvido por [Jose María Ponce Bernabé](https://github.com/jmponcebe) — 2025*
+*Desenvolvido por [Jose María Ponce Bernabé](https://github.com/jmponcebe) — 2026*
