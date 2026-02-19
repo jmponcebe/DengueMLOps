@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1280px;
+    height: 640px;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: linear-gradient(135deg, #0f0a1e 0%, #1a1333 30%, #0e1a2e 70%, #0a1628 100%);
+    color: #e6edf3;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Decorative gradient orbs */
+  body::before {
+    content: '';
+    position: absolute;
+    top: -80px;
+    right: 80px;
+    width: 550px;
+    height: 550px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, transparent 60%);
+    border-radius: 50%;
+  }
+  body::after {
+    content: '';
+    position: absolute;
+    bottom: -100px;
+    left: 60px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(20, 184, 166, 0.10) 0%, transparent 60%);
+    border-radius: 50%;
+  }
+
+  .content {
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 80px;
+  }
+
+  .title {
+    font-size: 88px;
+    font-weight: 900;
+    letter-spacing: -4px;
+    line-height: 1;
+    margin-bottom: 20px;
+  }
+  .title .dengue {
+    background: linear-gradient(135deg, #14b8a6, #06b6d4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .title .mlops {
+    background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    font-size: 26px;
+    color: #94a3b8;
+    margin-bottom: 40px;
+    line-height: 1.4;
+    font-weight: 400;
+    max-width: 1000px;
+    white-space: nowrap;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 36px;
+  }
+  .tag {
+    background: rgba(139, 92, 246, 0.10);
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    color: #a78bfa;
+    padding: 8px 20px;
+    border-radius: 24px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+  .stage {
+    background: rgba(20, 184, 166, 0.12);
+    border: 1px solid rgba(20, 184, 166, 0.25);
+    color: #5eead4;
+    padding: 10px 22px;
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+  }
+  .stage:first-child { border-radius: 8px 0 0 8px; }
+  .stage:last-child { border-radius: 0 8px 8px 0; }
+  .arrow {
+    color: rgba(20, 184, 166, 0.5);
+    font-size: 18px;
+    margin: 0 -1px;
+    z-index: 2;
+  }
+
+  .author {
+    position: absolute;
+    bottom: 22px;
+    font-size: 15px;
+    color: #475569;
+    font-weight: 500;
+    z-index: 1;
+  }
+</style>
+</head>
+<body>
+
+<div class="content">
+  <div class="title">
+    <span class="dengue">Dengue</span><span class="mlops">MLOps</span>
+  </div>
+  <div class="subtitle">
+    End-to-end MLOps pipeline for dengue alert level prediction in Brazil
+  </div>
+
+  <div class="tags">
+    <span class="tag">XGBoost</span>
+    <span class="tag">MLflow</span>
+    <span class="tag">FastAPI</span>
+    <span class="tag">Streamlit</span>
+    <span class="tag">Docker</span>
+    <span class="tag">AWS</span>
+    <span class="tag">Evidently</span>
+  </div>
+
+  <div class="pipeline">
+    <div class="stage">Data</div>
+    <span class="arrow">→</span>
+    <div class="stage">Features</div>
+    <span class="arrow">→</span>
+    <div class="stage">Train</div>
+    <span class="arrow">→</span>
+    <div class="stage">Track</div>
+    <span class="arrow">→</span>
+    <div class="stage">Deploy</div>
+    <span class="arrow">→</span>
+    <div class="stage">Monitor</div>
+  </div>
+</div>
+
+<div class="author">github.com/jmponcebe/DengueMLOps</div>
+
+</body>
+</html>
