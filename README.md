@@ -30,36 +30,48 @@ Production-grade ML pipeline that predicts **dengue alert levels** (1-4) across 
 
 ---
 
+## Demo
+
+### Streamlit Dashboard — Brazil Alert Map
+<p align="center">
+  <img src="docs/images/streamlit_dashboard.png" alt="Streamlit Dashboard" width="700">
+</p>
+
+### FastAPI — Auto-generated Swagger Docs
+<p align="center">
+  <img src="docs/images/swagger_ui.png" alt="Swagger UI" width="700">
+</p>
+
+### MLflow — Experiment Tracking
+<p align="center">
+  <img src="docs/images/mlflow_experiments.png" alt="MLflow Experiments" width="700">
+</p>
+
+### Model Results — Confusion Matrix (Champion)
+<p align="center">
+  <img src="docs/images/confusion_matrix.png" alt="Confusion Matrix" width="450">
+</p>
+
+---
+
 ## Architecture
 
+<p align="center">
+  <img src="docs/images/architecture_docker.png" alt="Docker Architecture" width="700">
+</p>
+
+<details>
+<summary>Text-based architecture overview</summary>
+
 ```
-┌─────────────┐     ┌─────────────────┐     ┌──────────────┐
-│  Mosqlimate  │────▶│  Feature Engine  │────▶│   XGBoost    │
-│    API       │     │  (15 features)   │     │  (champion)  │
-└─────────────┘     └─────────────────┘     └──────┬───────┘
-                                                    │
-                    ┌───────────────────────────────┘
-                    ▼
-    ┌──────────────────────────────────────────┐
-    │            Docker Compose                 │
-    │  ┌─────────────┐   ┌──────────────────┐  │
-    │  │  FastAPI     │   │   Streamlit      │  │
-    │  │  :8000       │◀──│   :8501          │  │
-    │  │  /predict    │   │   Mapa + Pred    │  │
-    │  └──────┬───────┘   └──────────────────┘  │
-    │         │                                  │
-    │  ┌──────▼───────┐                          │
-    │  │  Evidently   │                          │
-    │  │  Drift Det.  │                          │
-    │  └──────────────┘                          │
-    └──────────────────────────────────────────┘
-                    │
-    ┌───────────────▼──────────────────────┐
-    │          AWS (ECS/Fargate)            │
-    │   S3 (data/model) + ECR (images)     │
-    │   CloudFormation IaC                 │
-    └──────────────────────────────────────┘
+Data Layer          ML Pipeline          Serving Layer         Infrastructure
+─────────────      ─────────────        ─────────────         ──────────────
+Mosqlimate API  →  Feature Engine   →   FastAPI :8000     →   Docker Compose
+(4.5M records)     (15 features)        Streamlit :8501       AWS ECS/Fargate
+                   XGBoost training      Evidently drift       S3 + ECR
+                   MLflow tracking                             CloudFormation
 ```
+</details>
 
 ---
 
