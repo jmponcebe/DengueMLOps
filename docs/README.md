@@ -20,6 +20,9 @@ Esta carpeta contiene documentación técnica detallada, análisis metodológico
 - `api_client_usage.md` - Uso del cliente de la API mosqlimate
 - `api_authentication.md` - Autenticación con la API
 
+- `monitoring/README.md` — Guía del sistema de monitoreo, uso de `DriftDetector` y demo offline
+- `scripts/monitoring_demo.py` — Script standalone para generar reportes de drift sin depender de la API
+
 > **Quick start**: Para obtener el modelo champion y los datos necesarios, ejecutar
 > `python scripts/setup_data.py` (modelo + GeoJSON) o `python scripts/setup_data.py --latest`
 > (modelo + GeoJSON + datos del año actual). El modelo se descarga desde

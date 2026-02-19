@@ -62,8 +62,9 @@ Sistema de detección de data drift sobre las predicciones en producción.
 
 - **Reference dataset**: Datos de entrenamiento (2010-2021)
 - **Current dataset**: Predicciones recientes (ventana deslizante)
-- **Reportes**: Data Drift, Target Drift, Data Quality
+- **Reportes**: Data Drift, Data Summary
 - **Frecuencia**: Bajo demanda o programado (cron/EventBridge)
+- **Demo offline**: `scripts/monitoring_demo.py` genera reportes sin API, usando datos históricos o features sintéticas con drift configurable
 
 ### 4. MLflow Tracking
 

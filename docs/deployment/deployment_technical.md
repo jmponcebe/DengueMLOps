@@ -89,7 +89,8 @@ El dashboard se organizó en cuatro páginas:
    y los artefactos visuales (matriz de confusión, SHAP summary plot).
 
 4. **Monitoreo**: Distribución de predicciones recientes, acceso a
-   reportes de drift de Evidently, y opción de generar nuevos reportes.
+   reportes de drift de Evidently, comandos CLI para generar reportes
+   offline (`scripts/monitoring_demo.py`), y botón de flush del buffer.
 
 ### 2.2. Integración API-Dashboard
 
@@ -139,6 +140,14 @@ El drift puede indicar:
   consultas solo de Sudeste vs. entrenamiento con todo Brasil).
 - **Drift de concepto**: Cambio en la relación features-target, que
   requeriría reentrenamiento. Detectable solo con labels reales.
+
+### 3.4. Demo offline de monitoreo
+
+El script `scripts/monitoring_demo.py` permite generar reportes de drift
+sin depender de la API desplegada. Puede operar con datos históricos
+(parquet de producción) o con features sintéticas con drift configurable,
+lo que resulta útil para demos, testing y validación del pipeline de
+monitoreo de forma reproducible.
 
 ---
 
