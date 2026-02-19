@@ -238,30 +238,8 @@ evidently_reports/
 # Internal development guides (not for public)
 docs/GUIA_COMPLETAR_MEMORIA.md
 
-# LaTeX compiled outputs (use GitHub Releases for PDF)
-docs/memoria/TFM.pdf
-docs/memoria/TFM.docx
-docs/memoria/TFM.locode
+# LaTeX thesis (private, not for public repo)
+docs/memoria/
 
-# LaTeX auxiliary files (docs/memoria/)
-docs/memoria/*.aux
-docs/memoria/*.log
-docs/memoria/*.out
-docs/memoria/*.toc
-docs/memoria/*.lof
-docs/memoria/*.lot
-docs/memoria/*.loa
-docs/memoria/*.bbl
-docs/memoria/*.blg
-docs/memoria/*.fls
-docs/memoria/*.fdb_latexmk
-docs/memoria/*.synctex.gz
-docs/memoria/*.synctex(busy)
-docs/memoria/*.run.xml
-docs/memoria/*.bcf
-docs/memoria/*.nav
-docs/memoria/*.snm
-docs/memoria/*.vrb
-docs/memoria/*.xdv
-docs/memoria/*.locode
-docs/memoria/chapters/*.aux
+# Internal development guides (not for public)
+docs/GUIA_COMPLETAR_MEMORIA.md
