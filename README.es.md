@@ -11,7 +11,7 @@
 [![Evidently](https://img.shields.io/badge/monitoring-Evidently-6C3EC2.svg)](https://www.evidentlyai.com/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-> 🇬🇧 [Read in English](README.md)
+> 🇬🇧 [Read in English](README.md) · 🇧🇷 [Ler em português](README.pt-br.md)
 
 Pipeline de ML de nivel producción que predice **niveles de alerta de dengue** (1-4) en más de 5.500 municipios brasileños, usando únicamente variables epidemiológicas sin fuga de datos. Desarrollado como demostración de prácticas MLOps modernas: tracking de experimentos, servicio de modelos, contenedorización, CI/CD, despliegue en la nube y monitorización de data drift.
 
