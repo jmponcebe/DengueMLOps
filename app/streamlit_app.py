@@ -768,10 +768,17 @@ def monitoring_page():
 
     # Opción para generar reporte
     st.markdown("---")
-    if st.button("📊 Generar reporte de drift", type="secondary"):
+    st.markdown(
+        "**¿Cómo generar reportes?** Ejecuta desde la terminal:\n\n"
+        "```bash\n"
+        "python scripts/monitoring_demo.py        # Demo con datos reales o sintéticos\n"
+        "python -m src.monitoring.drift_detector   # Desde predicciones de la API\n"
+        "```"
+    )
+    if st.button("📊 Flush predicciones a CSV", type="secondary"):
         try:
             requests.post(f"{API_URL}/monitoring/flush", timeout=5)
-            st.success("Buffer de predicciones flushed. Ejecuta el drift detector para generar el reporte.")
+            st.success("Buffer de predicciones guardado en monitoring/predictions_log.csv")
         except Exception:
             st.warning("API no disponible para flush.")
 
