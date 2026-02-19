@@ -234,6 +234,7 @@ evidently_reports/
 
 #  GitHub copilot
 .github/copilot-instructions.md
+.github/agents/
 
 # Internal development guides (not for public)
 docs/GUIA_COMPLETAR_MEMORIA.md
