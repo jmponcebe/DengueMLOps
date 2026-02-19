@@ -7,18 +7,18 @@ name = "tfm-mlops-dengue"
 version = "0.1.0"
 description = "MLOps pipeline for dengue prediction in Brazil"
 authors = [
-    {name = "TFM Student", email = "student@universidad.edu"}
+    {name = "Jose María Ponce Bernabé", email = "josemaria.ponce@alu.uclm.es"}
 ]
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 keywords = ["mlops", "dengue", "prediction", "brazil", "epidemiology"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 
 # Dependencies managed in requirements.txt and requirements-prod.txt
@@ -32,16 +32,16 @@ dev = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/username/tfm-mlops-dengue"
-"Bug Reports" = "https://github.com/username/tfm-mlops-dengue/issues"
-"Source" = "https://github.com/username/tfm-mlops-dengue"
+"Homepage" = "https://github.com/jmponcebe/DengueMLOps"
+"Bug Reports" = "https://github.com/jmponcebe/DengueMLOps/issues"
+"Source" = "https://github.com/jmponcebe/DengueMLOps"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.black]
 line-length = 88
-target-version = ['py39']
+target-version = ['py311']
 include = '\.pyi?$'
 extend-exclude = '''
 /(

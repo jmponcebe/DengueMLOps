@@ -3,7 +3,7 @@ PROJECT_CONFIG = {
     "name": "tfm-mlops-dengue",
     "version": "0.1.0",
     "description": "MLOps pipeline for dengue prediction in Brazil",
-    "author": "TFM Student"
+    "author": "Jose María Ponce Bernabé"
 }
 
 # Data configuration
@@ -88,7 +88,7 @@ FEATURE_CONFIG = {
     },
     
     "spatial_features": {
-        "municipality_encoding": "target",
+        "municipality_encoding": "region",  # 5 macro-regions, not target encoding
         "regional_aggregation": True
     }
 }
@@ -119,7 +119,7 @@ MONITORING_CONFIG = {
 DEPLOYMENT_CONFIG = {
     "model_registry": {
         "staging_alias": "staging",
-        "production_alias": "production"
+        "production_alias": "champion"
     },
     
     "api": {
@@ -135,8 +135,8 @@ DEPLOYMENT_CONFIG = {
     },
     
     "docker": {
-        "base_image": "python:3.9-slim",
-        "requirements_file": "requirements.txt"
+        "base_image": "python:3.11-slim",
+        "requirements_file": "requirements-prod.txt"
     }
 }
 
