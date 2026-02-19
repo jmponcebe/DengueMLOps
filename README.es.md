@@ -101,6 +101,7 @@ python scripts/setup_data.py --all                 # Dataset histórico completo
 ```
 
 El script de setup descarga:
+
 - **Modelo champion** desde [GitHub Releases](https://github.com/jmponcebe/DengueMLOps/releases) (~6 MB)
 - **GeoJSON de Brasil** desde la API del IBGE para el mapa del dashboard
 - **Datos históricos** desde la [API de Mosqlimate](https://api.mosqlimate.org/) (opcional, requiere API key gratuita)

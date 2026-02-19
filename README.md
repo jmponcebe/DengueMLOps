@@ -101,6 +101,7 @@ python scripts/setup_data.py --all                 # Full historical dataset (20
 ```
 
 The setup script downloads:
+
 - **Champion model** from [GitHub Releases](https://github.com/jmponcebe/DengueMLOps/releases) (~6 MB)
 - **Brazil GeoJSON** from IBGE API for the dashboard map
 - **Historical data** from [Mosqlimate API](https://api.mosqlimate.org/) (optional, requires free API key)
@@ -269,7 +270,7 @@ Git tag v* → CD (build images → push to ECR → update ECS services)
 
 ---
 
-## Monitoring
+## Data Drift Monitoring
 
 The project includes data drift detection with [Evidently](https://www.evidentlyai.com/). To generate a demo report:
 

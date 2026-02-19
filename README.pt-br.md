@@ -101,6 +101,7 @@ python scripts/setup_data.py --all                 # Dataset histórico completo
 ```
 
 O script de setup baixa:
+
 - **Modelo champion** do [GitHub Releases](https://github.com/jmponcebe/DengueMLOps/releases) (~6 MB)
 - **GeoJSON do Brasil** da API do IBGE para o mapa do dashboard
 - **Dados históricos** da [API do Mosqlimate](https://api.mosqlimate.org/) (opcional, requer API key gratuita)
@@ -268,7 +269,8 @@ Git tag v* → CD (build imagens → push para ECR → atualizar serviços ECS)
 | `POST` | `/monitoring/flush` | Forçar flush do buffer de previsões para CSV |
 
 ---
-## Monitoramento
+
+## Monitoramento de Data Drift
 
 O projeto inclui detecção de data drift com [Evidently](https://www.evidentlyai.com/). Para gerar um relatório de demo:
 
@@ -282,6 +284,7 @@ Com dados históricos (`setup_data.py --all`), a demo usa dados de treino (2010-
 O relatório gerado pode ser visto no dashboard Streamlit (aba "Monitoreo") ou diretamente como arquivo HTML em `monitoring/reports/`.
 
 ---
+
 ## Roteiro
 
 - [ ] **Integração DVC** — Versionar dados e artefatos de modelo com [DVC](https://dvc.org/) para reprodutibilidade completa (`dvc pull` para obter tudo)

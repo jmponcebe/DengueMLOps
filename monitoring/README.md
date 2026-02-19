@@ -10,7 +10,7 @@ The monitoring system has three independent components:
 
 The FastAPI API automatically logs every prediction to a CSV file:
 
-```
+```text
 POST /predict → buffer in memory → flush every 100 predictions → monitoring/predictions_log.csv
 ```
 
@@ -44,13 +44,14 @@ Both generate an interactive HTML report in `monitoring/reports/`.
 ### 3. Visualization (dashboard)
 
 The Streamlit dashboard "Monitoreo" tab shows:
+
 - Prediction log statistics and distribution chart
 - Drift reports (HTML viewer with dropdown selector)
 - Flush button to write pending predictions to CSV
 
 ## File structure
 
-```
+```text
 monitoring/
 ├── predictions_log.csv     # Accumulated API predictions
 ├── reports/
@@ -62,7 +63,7 @@ monitoring/
 
 ## Data flow
 
-```
+```text
                     ┌──────────────┐
                     │ Mosqlimate   │
                     │ API data     │
@@ -70,21 +71,21 @@ monitoring/
                            │ setup_data.py --all
                            ▼
 ┌─────────────┐    ┌──────────────┐    ┌──────────────────┐
-│ API /predict│───▶│ predictions  │───▶│ drift_detector.py │
-│ (runtime)   │    │ _log.csv     │    │ (offline)         │
+│ API /predict│───▶│ predictions  │───▶│ drift_detector.py│
+│ (runtime)   │    │ _log.csv     │    │ (offline)        │
 └─────────────┘    └──────────────┘    └────────┬─────────┘
                                                 │
                            OR                   │
                                                 ▼
 ┌─────────────┐    ┌──────────────┐    ┌──────────────────┐
-│ monitoring  │───▶│ Real/synth   │───▶│ Evidently report  │
-│ _demo.py    │    │ data         │    │ (HTML)            │
+│ monitoring  │───▶│ Real/synth   │───▶│ Evidently report │
+│ _demo.py    │    │ data         │    │ (HTML)           │
 └─────────────┘    └──────────────┘    └────────┬─────────┘
                                                 │
                                                 ▼
                                        ┌──────────────────┐
-                                       │ Streamlit tab     │
-                                       │ "Monitoreo"       │
+                                       │ Streamlit tab    │
+                                       │ "Monitoreo"      │
                                        └──────────────────┘
 ```
 
