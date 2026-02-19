@@ -96,20 +96,20 @@ tfm-mlops/
 - **CI/CD**: GitHub Actions — tests/lint en push, deploy a AWS ECR/ECS en tags
 - **AWS**: Guía de despliegue para EC2 y ECS/Fargate con Learner Lab
 
-### Fase 5: Memoria TFM — En progreso
+### Fase 5: Memoria TFM — Completada
 
 - **Plantilla**: CIDaeN UCLM, compilación con XeLaTeX + BibTeX
-- **Estructura MLOps-focused** (6 capítulos + apéndice):
-  - Cap 1: Introducción (motivación MLOps, stack, objetivos)
-  - Cap 2: Problema, Datos y Modelo (condensado, ~4 páginas)
-  - Cap 3: Experimentación y Trazabilidad con MLflow
-  - Cap 4: Servicio de Predicción (FastAPI, Streamlit, Docker)
-  - Cap 5: Infraestructura, CI/CD y Monitoreo
-  - Cap 6: Conclusiones y Trabajo Futuro
-  - Apéndice A: Stack tecnológico (21 herramientas con versiones verificadas)
+- **Estructura MLOps-focused** (5 capítulos + 2 apéndices):
+  - Cap 1: Introducción (motivación MLOps, objetivos, estructura)
+  - Cap 2: Fundamentos (ML, MLOps, dengue en Brasil)
+  - Cap 3: Metodología y Desarrollo (datos, features, MLflow, serving, Docker, CI/CD, AWS, monitoreo)
+  - Cap 4: Resultados (métricas, trazabilidad MLflow, sistema desplegado, pipeline CI/CD, AWS, monitoreo)
+  - Cap 5: Conclusiones y Trabajo Futuro
+  - Apéndice A: Stack tecnológico (23 herramientas con versiones)
+  - Apéndice B: Anexo técnico (19 fragmentos de código)
 - **Bibliografía**: 18 referencias (epidemiología, ML, MLOps, frameworks)
-- **Capturas incluidas**: MLflow (10 screenshots), Swagger UI, Streamlit (mapa + predicción), Docker Compose, pytest + cobertura, confusion matrix
-- **Pendiente**: 3 diagramas (ciclo vectorial, arquitectura Docker, arquitectura AWS), 4 capturas de pantalla (GitHub Actions CI, smoke test, Evidently drift, Streamlit monitoreo), dedicatoria/agradecimientos
+- **Capturas incluidas**: MLflow (6 screenshots), Swagger UI, Streamlit (mapa + predicción + monitoreo), Docker Compose, pytest + cobertura, GitHub Actions (CI + CD), AWS (ECR, EC2, ECS), confession matrix, Evidently drift report
+- **3 diagramas propios**: Ciclo vectorial dengue, arquitectura Docker, arquitectura AWS
 
 ## Datos
 
