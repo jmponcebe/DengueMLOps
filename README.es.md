@@ -273,7 +273,8 @@ Git tag v* → CD (build imágenes → push a ECR → actualizar servicios ECS)
 
 - [ ] **Integración DVC** — Versionar datos y artefactos de modelo con [DVC](https://dvc.org/) para reproducibilidad completa (`dvc pull` para obtener todo)
 - [ ] **Modelos comunitarios Mosqlimate** — Integrar modelos públicos de predicción de [Mosqlimate](https://api.mosqlimate.org/) para ensemble o comparación benchmark
-- [ ] **Reentrenamiento automático** — Pipeline periódico activado por detección de drift
+- [ ] **Pipeline de datos automático** — Sincronización periódica desde la API de Mosqlimate hacia S3, manteniendo los datos de producción actualizados sin intervención manual
+- [ ] **Reentrenamiento automático** — Pipeline extremo a extremo activado por drift: sincronizar datos → reentrenar → evaluar → promover champion
 - [ ] **Monitoreo avanzado** — Monitoreo del rendimiento del modelo con bucle de retroalimentación
 - [ ] **Multi-model serving** — Pruebas A/B entre versiones de modelo vía la API
 - [ ] **Feature store** — Computación y servicio centralizado de features

@@ -273,7 +273,8 @@ Git tag v* → CD (build images → push to ECR → update ECS services)
 
 - [ ] **DVC integration** — Version data and model artifacts with [DVC](https://dvc.org/) for full reproducibility (`dvc pull` to get everything)
 - [ ] **Mosqlimate community models** — Integrate public prediction models from [Mosqlimate](https://api.mosqlimate.org/) for ensemble or benchmark comparison
-- [ ] **Automated retraining** — Periodic pipeline triggered by data drift detection
+- [ ] **Automated data pipeline** — Periodic sync from Mosqlimate API to S3, keeping production data up-to-date without manual intervention
+- [ ] **Automated retraining** — End-to-end pipeline triggered by data drift: sync data → retrain → evaluate → promote champion
 - [ ] **Advanced monitoring** — Model performance monitoring with ground truth feedback loop
 - [ ] **Multi-model serving** — A/B testing between model versions via the API
 - [ ] **Feature store** — Centralized feature computation and serving
