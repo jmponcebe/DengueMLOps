@@ -94,14 +94,18 @@ pip install -r requirements.txt
 ### Download Data & Model
 
 ```bash
-python scripts/setup_data.py          # Downloads champion model + GeoJSON
-python scripts/setup_data.py --all    # Also downloads historical data (needs API key)
+python scripts/setup_data.py                      # Downloads champion model + GeoJSON
+python scripts/setup_data.py --latest              # + current year data (quick start)
+python scripts/setup_data.py --data --from 2023    # Only data from 2023 to present
+python scripts/setup_data.py --all                 # Full historical dataset (2010-present)
 ```
 
 The setup script downloads:
 - **Champion model** from [GitHub Releases](https://github.com/jmponcebe/DengueMLOps/releases) (~6 MB)
 - **Brazil GeoJSON** from IBGE API for the dashboard map
-- **Historical data** from [Mosqlimate API](https://api.mosqlimate.org/) (optional, ~1.5 GB, requires free API key)
+- **Historical data** from [Mosqlimate API](https://api.mosqlimate.org/) (optional, requires free API key)
+
+> **Note**: Without data download, the API prediction works normally. The dashboard alert map requires at least `--latest` for current year data, or `--all` for the full historical view (~1.5 GB).
 
 ### Run with Docker (recommended)
 
@@ -268,6 +272,7 @@ Git tag v* → CD (build images → push to ECR → update ECS services)
 ## Roadmap
 
 - [ ] **DVC integration** — Version data and model artifacts with [DVC](https://dvc.org/) for full reproducibility (`dvc pull` to get everything)
+- [ ] **Mosqlimate community models** — Integrate public prediction models from [Mosqlimate](https://api.mosqlimate.org/) for ensemble or benchmark comparison
 - [ ] **Automated retraining** — Periodic pipeline triggered by data drift detection
 - [ ] **Advanced monitoring** — Model performance monitoring with ground truth feedback loop
 - [ ] **Multi-model serving** — A/B testing between model versions via the API

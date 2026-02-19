@@ -148,6 +148,21 @@ push to main
 1. **CI** (`ci.yml`): Tests + lint en cada push/PR
 2. **CD** (`deploy.yml`): Build Docker → Push ECR → Update ECS (solo en main/tags)
 
+## Reproducibilidad Local
+
+Para ejecutar el sistema localmente, `scripts/setup_data.py` es el punto de entrada
+para descargar los artefactos necesarios:
+
+| Modo | Comando | Qué descarga | API key |
+| --- | --- | --- | --- |
+| Default | `python scripts/setup_data.py` | Modelo champion + GeoJSON | No |
+| Quick start | `--latest` | Modelo + GeoJSON + datos año actual | Sí |
+| Rango | `--data --from 2020 --to 2024` | Datos de un rango de años | Sí |
+| Completo | `--all` | Todo (histórico 2010-presente, ~1.5 GB) | Sí |
+
+El modelo champion se obtiene desde [GitHub Releases v1.0.0](https://github.com/jmponcebe/DengueMLOps/releases/tag/v1.0.0).
+En AWS, los contenedores descargan datos y modelo desde S3 vía entrypoint scripts.
+
 ## Flujo de Datos en Producción
 
 ```text

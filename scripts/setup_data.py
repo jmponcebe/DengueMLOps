@@ -8,9 +8,11 @@ Downloads:
   3. Historical dengue data from Mosqlimate API (optional, requires API key)
 
 Usage:
-  python scripts/setup_data.py              # Download model + GeoJSON
-  python scripts/setup_data.py --all        # Download everything (needs API key)
-  python scripts/setup_data.py --data-only  # Only Mosqlimate data
+  python scripts/setup_data.py                      # Download model + GeoJSON
+  python scripts/setup_data.py --all                 # Download everything (needs API key)
+  python scripts/setup_data.py --latest              # Model + GeoJSON + current year data
+  python scripts/setup_data.py --data --from 2023    # Data from 2023 to present
+  python scripts/setup_data.py --data --from 2022 --to 2024  # Data for specific range
 """
 
 import argparse
@@ -124,11 +126,11 @@ def download_geojson():
         return False
 
 
-def download_data():
+def download_data(year_start=2010, year_end=None):
     """Download historical dengue data from Mosqlimate API."""
     try:
         sys.path.insert(0, str(PROJECT_ROOT))
-        from src.data.api_client import sync_dataset
+        from src.data.api_client import MosqlimateAPIClient
     except ImportError:
         print("  Could not import api_client. Install dependencies first:")
         print("  pip install -r requirements.txt")
@@ -156,9 +158,17 @@ def download_data():
         print("  5. Re-run: python scripts/setup_data.py --all")
         return False
 
-    print("  Downloading historical data from Mosqlimate API...")
-    print("  This may take 30-60 minutes for the full dataset (2010-present)")
-    sync_dataset(year_start=2010)
+    if year_end is None:
+        from datetime import datetime as dt
+        year_end = dt.now().year
+
+    period = f"{year_start}-{year_end}" if year_start != year_end else str(year_start)
+    print(f"  Downloading data from Mosqlimate API ({period})...")
+    if year_start <= 2015:
+        print("  This may take 30-60 minutes for the full dataset")
+
+    client = MosqlimateAPIClient()
+    client.sync_data(year_start=year_start, year_end=year_end)
     return True
 
 
@@ -168,11 +178,23 @@ def main():
     )
     parser.add_argument(
         "--all", action="store_true",
-        help="Download everything including Mosqlimate data (requires API key)"
+        help="Download everything: model + GeoJSON + full historical data (2010-present)"
     )
     parser.add_argument(
-        "--data-only", action="store_true",
-        help="Only download Mosqlimate data"
+        "--latest", action="store_true",
+        help="Download model + GeoJSON + current year data (enough for dashboard map)"
+    )
+    parser.add_argument(
+        "--data", action="store_true",
+        help="Download Mosqlimate data (combine with --from/--to for date range)"
+    )
+    parser.add_argument(
+        "--from", type=int, dest="year_from", default=2010, metavar="YEAR",
+        help="Start year for data download (default: 2010)"
+    )
+    parser.add_argument(
+        "--to", type=int, dest="year_to", default=None, metavar="YEAR",
+        help="End year for data download (default: current year)"
     )
     parser.add_argument(
         "--no-model", action="store_true",
@@ -184,16 +206,38 @@ def main():
     print("DengueMLOps - Data Setup")
     print("=" * 60)
 
-    if args.data_only:
-        print("\n[1/1] Historical dengue data")
-        download_data()
+    # Mode: --data only (just download data for the specified range)
+    if args.data and not args.all and not args.latest:
+        print(f"\n[1/1] Historical dengue data ({args.year_from}-{args.year_to or 'present'})")
+        download_data(year_start=args.year_from, year_end=args.year_to)
         print("\nDone!")
         return
 
-    step = 1
-    total = 2 + (1 if args.all else 0) - (1 if args.no_model else 0)
+    # Determine what to download
+    include_model = not args.no_model
+    include_data = args.all or args.latest
 
-    if not args.no_model:
+    if args.latest:
+        from datetime import datetime as dt
+        year_start = dt.now().year
+        year_end = year_start
+    elif args.all:
+        year_start = args.year_from
+        year_end = args.year_to
+    else:
+        year_start = args.year_from
+        year_end = args.year_to
+
+    steps = []
+    if include_model:
+        steps.append("model")
+    steps.append("geojson")
+    if include_data:
+        steps.append("data")
+    total = len(steps)
+    step = 1
+
+    if include_model:
         print(f"\n[{step}/{total}] Champion model")
         download_model()
         step += 1
@@ -202,9 +246,10 @@ def main():
     download_geojson()
     step += 1
 
-    if args.all:
-        print(f"\n[{step}/{total}] Historical dengue data")
-        download_data()
+    if include_data:
+        period = f"{year_start}-{year_end or 'present'}"
+        print(f"\n[{step}/{total}] Historical dengue data ({period})")
+        download_data(year_start=year_start, year_end=year_end)
 
     print("\n" + "=" * 60)
     print("Setup complete!")
@@ -212,10 +257,12 @@ def main():
     print("Next steps:")
     print("  docker compose up --build    # Run with Docker")
     print("  uvicorn app.api:app          # Or run API locally")
-    if not args.all:
+    if not include_data:
         print()
-        print("Optional: download full dataset (~1.5GB) for exploration:")
-        print("  python scripts/setup_data.py --all")
+        print("Optional: download data for the dashboard alert map:")
+        print("  python scripts/setup_data.py --latest     # Current year only")
+        print("  python scripts/setup_data.py --all        # Full dataset (~1.5GB)")
+        print("  python scripts/setup_data.py --data --from 2023  # Custom range")
     print("=" * 60)
 
 

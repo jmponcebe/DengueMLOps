@@ -4,6 +4,24 @@
 
 **API Key requerido**. Ver [api_authentication.md](api_authentication.md) para obtenerlo.
 
+## Forma Recomendada: `setup_data.py`
+
+Para descargar datos, la forma más sencilla es usar el script de setup que
+internamente utiliza este cliente:
+
+```bash
+# Datos del año actual (requiere API key)
+python scripts/setup_data.py --latest
+
+# Datos de un rango específico
+python scripts/setup_data.py --data --from 2020 --to 2024
+
+# Dataset completo histórico (~1.5 GB)
+python scripts/setup_data.py --all
+```
+
+El cliente puede usarse también de forma programática:
+
 ## Uso Básico
 
 ```python

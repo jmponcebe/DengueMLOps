@@ -20,6 +20,11 @@ Esta carpeta contiene documentación técnica detallada, análisis metodológico
 - `api_client_usage.md` - Uso del cliente de la API mosqlimate
 - `api_authentication.md` - Autenticación con la API
 
+> **Quick start**: Para obtener el modelo champion y los datos necesarios, ejecutar
+> `python scripts/setup_data.py` (modelo + GeoJSON) o `python scripts/setup_data.py --latest`
+> (modelo + GeoJSON + datos del año actual). El modelo se descarga desde
+> [GitHub Releases v1.0.0](https://github.com/jmponcebe/DengueMLOps/releases/tag/v1.0.0).
+
 ## Propósito
 
 Los notebooks mantienen el código conciso y práctico, mientras que esta documentación proporciona:

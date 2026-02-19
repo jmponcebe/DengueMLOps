@@ -2,7 +2,11 @@
 
 ## Resumen
 
-La API de Mosqlimate requiere un **X-UID-Key** en todas las peticiones.
+La API de Mosqlimate requiere un **X-UID-Key** para descargar datos epidemiológicos.
+
+> **Nota**: El modo por defecto de `scripts/setup_data.py` (modelo champion + GeoJSON)
+> **no** requiere API key. Solo los modos que descargan datos de Mosqlimate
+> (`--latest`, `--data`, `--all`) necesitan la clave configurada.
 
 ## Cómo Obtener el API Key
 

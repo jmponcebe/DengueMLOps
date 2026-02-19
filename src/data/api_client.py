@@ -203,6 +203,7 @@ class MosqlimateAPIClient:
         self,
         states: Optional[List[str]] = None,
         year_start: int = 2010,
+        year_end: Optional[int] = None,
         output_path: Optional[Union[str, Path]] = None,
         save_format: str = "parquet"
     ):
@@ -213,6 +214,7 @@ class MosqlimateAPIClient:
         Args:
             states: List of state codes. If None, uses all
             year_start: Start year
+            year_end: End year. If None, uses current year
             output_path: Base path to save data
             save_format: Format to save ('parquet' recommended)
         """
@@ -225,8 +227,9 @@ class MosqlimateAPIClient:
         output_path = Path(output_path)
         output_path.mkdir(parents=True, exist_ok=True)
 
-        # Año final = año actual
-        year_end = datetime.now().year
+        # Año final = año actual si no se especifica
+        if year_end is None:
+            year_end = datetime.now().year
 
         # Detectar qué meses faltan
         logger.info("🔍 Detectando datos faltantes...")

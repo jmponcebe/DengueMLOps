@@ -154,7 +154,24 @@ Se crearon dos Dockerfiles especializados:
 - `Dockerfile.dashboard`: Imagen para Streamlit (~500MB).
   Se conecta a la API vía HTTP, incluye artefactos visuales.
 
-### 4.2. Docker Compose
+### 4.2. Preparación de datos local
+
+Antes de levantar los contenedores, es necesario disponer del modelo
+champion y los datos. El script `scripts/setup_data.py` automatiza
+esta descarga:
+
+```bash
+# Mínimo: modelo champion (GitHub Releases) + GeoJSON (IBGE)
+python scripts/setup_data.py
+
+# Quick start con datos del año actual para el dashboard
+python scripts/setup_data.py --latest
+
+# Dataset completo histórico (~1.5 GB, requiere API key)
+python scripts/setup_data.py --all
+```
+
+### 4.3. Docker Compose
 
 Para desarrollo local, `docker-compose.yml` orquesta ambos servicios
 con health checks y dependencias. El servicio MLflow UI es opcional

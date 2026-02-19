@@ -94,14 +94,18 @@ pip install -r requirements.txt
 ### Descargar Datos y Modelo
 
 ```bash
-python scripts/setup_data.py          # Descarga modelo champion + GeoJSON
-python scripts/setup_data.py --all    # También descarga datos históricos (necesita API key)
+python scripts/setup_data.py                      # Descarga modelo champion + GeoJSON
+python scripts/setup_data.py --latest              # + datos del año actual (inicio rápido)
+python scripts/setup_data.py --data --from 2023    # Solo datos desde 2023 hasta hoy
+python scripts/setup_data.py --all                 # Dataset histórico completo (2010-presente)
 ```
 
 El script de setup descarga:
 - **Modelo champion** desde [GitHub Releases](https://github.com/jmponcebe/DengueMLOps/releases) (~6 MB)
 - **GeoJSON de Brasil** desde la API del IBGE para el mapa del dashboard
-- **Datos históricos** desde la [API de Mosqlimate](https://api.mosqlimate.org/) (opcional, ~1.5 GB, requiere API key gratuita)
+- **Datos históricos** desde la [API de Mosqlimate](https://api.mosqlimate.org/) (opcional, requiere API key gratuita)
+
+> **Nota**: Sin descargar datos, la predicción de la API funciona normalmente. El mapa de alertas del dashboard requiere al menos `--latest` para datos del año actual, o `--all` para la vista histórica completa (~1.5 GB).
 
 ### Ejecutar con Docker (recomendado)
 
@@ -268,6 +272,7 @@ Git tag v* → CD (build imágenes → push a ECR → actualizar servicios ECS)
 ## Hoja de Ruta
 
 - [ ] **Integración DVC** — Versionar datos y artefactos de modelo con [DVC](https://dvc.org/) para reproducibilidad completa (`dvc pull` para obtener todo)
+- [ ] **Modelos comunitarios Mosqlimate** — Integrar modelos públicos de predicción de [Mosqlimate](https://api.mosqlimate.org/) para ensemble o comparación benchmark
 - [ ] **Reentrenamiento automático** — Pipeline periódico activado por detección de drift
 - [ ] **Monitoreo avanzado** — Monitoreo del rendimiento del modelo con bucle de retroalimentación
 - [ ] **Multi-model serving** — Pruebas A/B entre versiones de modelo vía la API
