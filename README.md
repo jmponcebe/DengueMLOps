@@ -91,6 +91,18 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+### Download Data & Model
+
+```bash
+python scripts/setup_data.py          # Downloads champion model + GeoJSON
+python scripts/setup_data.py --all    # Also downloads historical data (needs API key)
+```
+
+The setup script downloads:
+- **Champion model** from [GitHub Releases](https://github.com/jmponcebe/DengueMLOps/releases) (~6 MB)
+- **Brazil GeoJSON** from IBGE API for the dashboard map
+- **Historical data** from [Mosqlimate API](https://api.mosqlimate.org/) (optional, ~1.5 GB, requires free API key)
+
 ### Run with Docker (recommended)
 
 ```bash
@@ -250,6 +262,16 @@ Git tag v* → CD (build images → push to ECR → update ECS services)
 | `POST` | `/predict` | Single prediction (15 features → alert level + probabilities) |
 | `POST` | `/predict/batch` | Batch prediction |
 | `POST` | `/monitoring/flush` | Force prediction buffer flush to CSV |
+
+---
+
+## Roadmap
+
+- [ ] **DVC integration** — Version data and model artifacts with [DVC](https://dvc.org/) for full reproducibility (`dvc pull` to get everything)
+- [ ] **Automated retraining** — Periodic pipeline triggered by data drift detection
+- [ ] **Advanced monitoring** — Model performance monitoring with ground truth feedback loop
+- [ ] **Multi-model serving** — A/B testing between model versions via the API
+- [ ] **Feature store** — Centralized feature computation and serving
 
 ---
 
