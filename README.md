@@ -4,8 +4,11 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![XGBoost](https://img.shields.io/badge/model-XGBoost-orange.svg)](https://xgboost.readthedocs.io/)
 [![MLflow](https://img.shields.io/badge/tracking-MLflow-0194E2.svg)](https://mlflow.org/)
+[![FastAPI](https://img.shields.io/badge/API-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
+[![Streamlit](https://img.shields.io/badge/dashboard-Streamlit-FF4B4B.svg)](https://streamlit.io/)
 [![Docker](https://img.shields.io/badge/deploy-Docker-2496ED.svg)](https://www.docker.com/)
 [![AWS](https://img.shields.io/badge/cloud-AWS-FF9900.svg)](https://aws.amazon.com/)
+[![Evidently](https://img.shields.io/badge/monitoring-Evidently-6C3EC2.svg)](https://www.evidentlyai.com/)
 
 Production-grade ML pipeline that predicts **dengue alert levels** (1-4) across 5,500+ Brazilian municipalities using only non-leaking epidemiological features. Built as a showcase of modern MLOps practices: experiment tracking, model serving, containerization, CI/CD, cloud deployment, and data drift monitoring.
 
@@ -47,31 +50,19 @@ Production-grade ML pipeline that predicts **dengue alert levels** (1-4) across 
   <img src="docs/images/mlflow_experiments.png" alt="MLflow Experiments" width="700">
 </p>
 
-### Model Results — Confusion Matrix (Champion)
-<p align="center">
-  <img src="docs/images/confusion_matrix.png" alt="Confusion Matrix" width="450">
-</p>
-
 ---
 
 ## Architecture
 
+### Docker Compose
 <p align="center">
   <img src="docs/images/architecture_docker.png" alt="Docker Architecture" width="700">
 </p>
 
-<details>
-<summary>Text-based architecture overview</summary>
-
-```
-Data Layer          ML Pipeline          Serving Layer         Infrastructure
-─────────────      ─────────────        ─────────────         ──────────────
-Mosqlimate API  →  Feature Engine   →   FastAPI :8000     →   Docker Compose
-(4.5M records)     (15 features)        Streamlit :8501       AWS ECS/Fargate
-                   XGBoost training      Evidently drift       S3 + ECR
-                   MLflow tracking                             CloudFormation
-```
-</details>
+### AWS Deployment (ECS/Fargate)
+<p align="center">
+  <img src="docs/images/architecture_aws.png" alt="AWS Architecture" width="700">
+</p>
 
 ---
 
