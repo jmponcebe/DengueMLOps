@@ -36,23 +36,29 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build & push API image
+      - name: Build API image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.ref_name }}
         run: |
           docker build -f Dockerfile.api -t $ECR_REGISTRY/$ECR_REPOSITORY_API:$IMAGE_TAG .
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY_API:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY_API:latest
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY_API:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY_API:latest
 
-      - name: Build & push Dashboard image
+      - name: Build Dashboard image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.ref_name }}
         run: |
           docker build -f Dockerfile.dashboard -t $ECR_REGISTRY/$ECR_REPOSITORY_DASHBOARD:$IMAGE_TAG .
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY_DASHBOARD:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY_DASHBOARD:latest
+
+      - name: Push images to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.ref_name }}
+        run: |
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_API:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_API:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_DASHBOARD:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_DASHBOARD:latest
 
