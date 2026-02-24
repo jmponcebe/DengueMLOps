@@ -9,11 +9,11 @@ from enum import IntEnum
 
 
 class AlertLevel(IntEnum):
-    """Niveles de alerta epidemiológica del InfoDengue."""
-    VERDE = 1
-    AMARELO = 2
-    LARANJA = 3
-    VERMELHO = 4
+    """InfoDengue epidemiological alert levels."""
+    GREEN = 1
+    YELLOW = 2
+    ORANGE = 3
+    RED = 4
 
 
 # 15 features de producción (sin leakage)
@@ -25,27 +25,27 @@ FEATURE_NAMES = [
     "region_Nordeste", "region_Centro-Oeste", "region_Sudeste", "region_Sul",
 ]
 
-ALERT_LABELS = {1: "Verde", 2: "Amarelo", 3: "Laranja", 4: "Vermelho"}
+ALERT_LABELS = {1: "Green", 2: "Yellow", 3: "Orange", 4: "Red"}
 ALERT_COLORS = {1: "#00cc00", 2: "#ffcc00", 3: "#ff6600", 4: "#cc0000"}
 
 
 class PredictionInput(BaseModel):
-    """Input para predicción individual."""
-    month_sin: float = Field(..., ge=-1, le=1, description="Seno del mes (encoding cíclico)")
-    month_cos: float = Field(..., ge=-1, le=1, description="Coseno del mes")
-    se_sin: float = Field(..., ge=-1, le=1, description="Seno de la semana epidemiológica")
-    se_cos: float = Field(..., ge=-1, le=1, description="Coseno de la semana epidemiológica")
-    is_peak_season: int = Field(..., ge=0, le=1, description="1 si es temporada pico (ene-abr)")
-    quarter: int = Field(..., ge=1, le=4, description="Trimestre del año")
+    """Input for individual prediction."""
+    month_sin: float = Field(..., ge=-1, le=1, description="Month sine (cyclic encoding)")
+    month_cos: float = Field(..., ge=-1, le=1, description="Month cosine")
+    se_sin: float = Field(..., ge=-1, le=1, description="Epidemiological week sine")
+    se_cos: float = Field(..., ge=-1, le=1, description="Epidemiological week cosine")
+    is_peak_season: int = Field(..., ge=0, le=1, description="1 if peak season (Jan-Apr)")
+    quarter: int = Field(..., ge=1, le=4, description="Year quarter")
 
-    # Climáticas — pueden ser null si no hay datos con lag suficiente
-    tempmed_lag8w: Optional[float] = Field(None, description="Temperatura media lag 8 semanas")
-    tempmed_roll12w: Optional[float] = Field(None, description="Media móvil temperatura 12 semanas")
-    umidmed_roll4w: Optional[float] = Field(None, description="Media móvil humedad 4 semanas")
-    temp_x_humid_lag4w: Optional[float] = Field(None, description="Interacción temp*humedad lag 4w")
+    # Climate — can be null if no data with sufficient lag
+    tempmed_lag8w: Optional[float] = Field(None, description="Mean temperature 8-week lag")
+    tempmed_roll12w: Optional[float] = Field(None, description="Temperature 12-week rolling mean")
+    umidmed_roll4w: Optional[float] = Field(None, description="Humidity 4-week rolling mean")
+    temp_x_humid_lag4w: Optional[float] = Field(None, description="Temp*humidity interaction 4w lag")
 
-    # Geográficas
-    pop_log: float = Field(..., gt=0, description="Log de la población del municipio")
+    # Geographic
+    pop_log: float = Field(..., gt=0, description="Log of municipality population")
     region_Nordeste: int = Field(0, ge=0, le=1)
     region_Centro_Oeste: int = Field(0, ge=0, le=1, alias="region_Centro-Oeste")
     region_Sudeste: int = Field(0, ge=0, le=1)
@@ -75,39 +75,39 @@ class PredictionInput(BaseModel):
 
 
 class PredictionResult(BaseModel):
-    """Resultado de una predicción."""
-    nivel: int = Field(..., ge=1, le=4, description="Nivel de alerta predicho (1-4)")
-    label: str = Field(..., description="Etiqueta del nivel (Verde/Amarelo/Laranja/Vermelho)")
-    color: str = Field(..., description="Color hex del nivel de alerta")
+    """Prediction result."""
+    nivel: int = Field(..., ge=1, le=4, description="Predicted alert level (1-4)")
+    label: str = Field(..., description="Level label (Green/Yellow/Orange/Red)")
+    color: str = Field(..., description="Alert level hex color")
     probabilities: Dict[str, float] = Field(
-        ..., description="Probabilidad por clase"
+        ..., description="Per-class probability"
     )
 
 
 class PredictionResponse(BaseModel):
-    """Response de predicción individual."""
+    """Individual prediction response."""
     prediction: PredictionResult
     model_version: str
     features_used: int
 
 
 class BatchInput(BaseModel):
-    """Input para predicción por lotes."""
+    """Batch prediction input."""
     instances: List[PredictionInput] = Field(
         ..., min_length=1, max_length=1000,
-        description="Lista de instancias a predecir (máx 1000)"
+        description="List of instances to predict (max 1000)"
     )
 
 
 class BatchResponse(BaseModel):
-    """Response de predicción por lotes."""
+    """Batch prediction response."""
     predictions: List[PredictionResult]
     count: int
     model_version: str
 
 
 class ModelInfo(BaseModel):
-    """Información del modelo en producción."""
+    """Production model information."""
     name: str
     version: str
     alias: str

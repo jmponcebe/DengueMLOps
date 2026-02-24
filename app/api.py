@@ -104,9 +104,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Dengue Alert Level Prediction API",
     description=(
-        "API REST para predicción del nivel de alerta de dengue (1-4) "
-        "en municipios de Brasil. Modelo XGBoost optimizado con Optuna, "
-        "15 features de producción sin target leakage."
+        "REST API for dengue alert level prediction (1-4) "
+        "in Brazilian municipalities. XGBoost model optimized with Optuna, "
+        "15 production features with no target leakage."
     ),
     version="1.0.0",
     lifespan=lifespan,
@@ -175,7 +175,7 @@ def _flush_predictions():
 
 @app.get("/health", response_model=HealthResponse, tags=["system"])
 async def health_check():
-    """Estado del servicio y disponibilidad del modelo."""
+    """Service status and model availability."""
     return HealthResponse(
         status="healthy" if _state["model_loaded"] else "degraded",
         model_loaded=_state["model_loaded"],
@@ -185,9 +185,9 @@ async def health_check():
 
 @app.get("/model/info", response_model=ModelInfo, tags=["model"])
 async def model_info():
-    """Metadata del modelo champion en producción."""
+    """Champion model metadata in production."""
     if not _state["model_loaded"]:
-        raise HTTPException(status_code=503, detail="Modelo no disponible")
+        raise HTTPException(status_code=503, detail="Model not available")
 
     return ModelInfo(
         name=REGISTERED_MODEL_NAME,
@@ -205,9 +205,9 @@ async def model_info():
         },
         training_period="2010-2021",
         description=(
-            "Clasificador de nivel de alerta de dengue (1-4) para municipios "
-            "de Brasil. XGBoost con balanced sample weights, optimizado con "
-            "Optuna (40 trials). 15 features sin target leakage."
+            "Dengue alert level classifier (1-4) for Brazilian municipalities. "
+            "XGBoost with balanced sample weights, optimized with "
+            "Optuna (40 trials). 15 features with no target leakage."
         ),
     )
 
@@ -215,13 +215,13 @@ async def model_info():
 @app.post("/predict", response_model=PredictionResponse, tags=["prediction"])
 async def predict(input_data: PredictionInput):
     """
-    Predicción individual del nivel de alerta de dengue.
+    Individual dengue alert level prediction.
 
-    Recibe las 15 features de producción y devuelve el nivel predicho
-    (1-4) con probabilidades por clase.
+    Receives the 15 production features and returns the predicted level
+    (1-4) with per-class probabilities.
     """
     if not _state["model_loaded"]:
-        raise HTTPException(status_code=503, detail="Modelo no disponible")
+        raise HTTPException(status_code=503, detail="Model not available")
 
     features = input_data.to_feature_dict()
     result = _predict_single(features)
@@ -237,10 +237,10 @@ async def predict(input_data: PredictionInput):
 @app.post("/predict/batch", response_model=BatchResponse, tags=["prediction"])
 async def predict_batch(batch: BatchInput):
     """
-    Predicción por lotes. Máximo 1000 instancias por request.
+    Batch prediction. Maximum 1000 instances per request.
     """
     if not _state["model_loaded"]:
-        raise HTTPException(status_code=503, detail="Modelo no disponible")
+        raise HTTPException(status_code=503, detail="Model not available")
 
     results = []
     for instance in batch.instances:
@@ -258,7 +258,7 @@ async def predict_batch(batch: BatchInput):
 
 @app.post("/monitoring/flush", tags=["monitoring"])
 async def flush_predictions():
-    """Fuerza el flush del buffer de predicciones a disco."""
+    """Force flush of the predictions buffer to disk."""
     count = len(_state["predictions_log"])
     _flush_predictions()
     return {"flushed": count, "path": str(PREDICTIONS_LOG_PATH)}

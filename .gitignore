@@ -236,11 +236,12 @@ evidently_reports/
 .github/copilot-instructions.md
 .github/agents/
 
-# Internal development guides (not for public)
-docs/GUIA_COMPLETAR_MEMORIA.md
-
 # LaTeX thesis (private, not for public repo)
 docs/memoria/
 
-# Internal development guides (not for public)
-docs/GUIA_COMPLETAR_MEMORIA.md
+# Defense preparation (private)
+docs/CHEATSHEET_DEFENSA.md
+
+# Personal learning documents
+docs/learning/
+

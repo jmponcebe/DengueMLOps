@@ -1,0 +1,67 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        ".venv\\Scripts\\activate": true,
+        "Move-Item": true,
+        "/^python -c \"import json; nb=json\\.load\\(open\\(r'c:\\\\Users\\\\ponce\\\\CIDaeN\\\\tfm-mlops\\\\notebooks\\\\03-modeling\\.ipynb'\\)\\); \\[print\\(i,':', ''\\.join\\(c\\['source'\\]\\[:3\\]\\)\\.strip\\(\\)\\[:80\\]\\) for i,c in enumerate\\(nb\\['cells'\\]\\) if 'savefig' in ''\\.join\\(c\\['source'\\]\\) or 'write_image' in ''\\.join\\(c\\['source'\\]\\)\\]\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python _check_paths\\.py$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python -c \"from configs\\.mlflow_config import ARTIFACT_TEMP_DIR, MLFLOW_TRACKING_URI, PROJECT_ROOT; print\\('ROOT:', PROJECT_ROOT\\); print\\('URI:', MLFLOW_TRACKING_URI\\); print\\('TMP:', ARTIFACT_TEMP_DIR\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "xelatex": true,
+        ".venv\\Scripts\\python": true
+    },
+
+    // ── LaTeX Workshop ──────────────────────────────────────
+    "latex-workshop.latex.recipe.default": "xelatex + bibtex + xelatex*2",
+    "latex-workshop.latex.rootFile.doNotPrompt": true,
+    "latex-workshop.latex.rootFile.indicator": "\\documentclass",
+
+    "latex-workshop.latex.recipes": [
+        {
+            "name": "xelatex + bibtex + xelatex*2",
+            "tools": ["xelatex", "bibtex", "xelatex", "xelatex"]
+        },
+        {
+            "name": "xelatex",
+            "tools": ["xelatex"]
+        }
+    ],
+
+    "latex-workshop.latex.tools": [
+        {
+            "name": "xelatex",
+            "command": "xelatex",
+            "args": [
+                "-synctex=1",
+                "-interaction=nonstopmode",
+                "-file-line-error",
+                "%DOC%"
+            ],
+            "env": {}
+        },
+        {
+            "name": "bibtex",
+            "command": "bibtex",
+            "args": ["%DOCFILE%"],
+            "env": {}
+        }
+    ],
+
+    "latex-workshop.latex.clean.fileTypes": [
+        "*.aux", "*.bbl", "*.blg", "*.idx", "*.ind", "*.lof",
+        "*.lot", "*.out", "*.toc", "*.acn", "*.acr", "*.alg",
+        "*.glg", "*.glo", "*.gls", "*.fls", "*.log", "*.fdb_latexmk",
+        "*.snm", "*.synctex(busy)", "*.synctex.gz", "*.nav", "*.vrb"
+    ],
+
+    "latex-workshop.latex.clean.method": "glob",
+    "latex-workshop.latex.autoBuild.run": "onSave",
+    "latex-workshop.view.pdf.viewer": "tab"
+}

@@ -17,8 +17,8 @@ flowchart TB
   end
  subgraph AWS["AWS · us-east-1"]
         ECS
-        ECR["**ECR**<br>dengue-api · dengue-dashboard"]
-        S3[("**S3** · dengue-mlops-data<br>parquet · modelo · GeoJSON")]
+        ECR["**ECR**<br>dengue-api · <br>dengue-dashboard"]
+        S3[("**S3** <br>dengue-mlops-data<br>parquet · model ·<br>GeoJSON")]
         CW[("CloudWatch")]
   end
     DEV(("👨‍💻 Dev")) -- git tag + push --> REPO["GitHub · DengueMLOps"]
@@ -28,7 +28,7 @@ flowchart TB
     ECR -- pull --> ECS
     S3 -- entrypoint --> ECS
     ECS -- logs --> CW
-    INET(("🌐 Internet")) -- HTTP · IP pública --> ECS
+    INET(("🌐 Internet")) -- HTTP · Public IP --> ECS
 
     TASK_API@{ shape: rect}
     style ECS fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000

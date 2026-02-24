@@ -36,14 +36,14 @@ DATA_DIR = PROJECT_ROOT / "data" / "raw" / "historical_api_data"
 GEOJSON_PATH = PROJECT_ROOT / "data" / "external" / "brazil_uf_simplified.geojson"
 GEOJSON_PATH_FALLBACK = PROJECT_ROOT / "data" / "external" / "brazil_uf.geojson"
 
-ALERT_LABELS = {1: "Verde", 2: "Amarelo", 3: "Laranja", 4: "Vermelho"}
+ALERT_LABELS = {1: "Green", 2: "Yellow", 3: "Orange", 4: "Red"}
 ALERT_COLORS = {1: "#00cc00", 2: "#ffcc00", 3: "#ff6600", 4: "#cc0000"}
 ALERT_COLORS_PLOTLY = ["#00cc00", "#ffcc00", "#ff6600", "#cc0000"]
 ALERT_DESCRIPTIONS = {
-    1: "Situación favorable. Baja incidencia de casos.",
-    2: "Atención. Condiciones pueden favorecer transmisión.",
-    3: "Alerta. Aumento significativo de incidencia.",
-    4: "Emergencia. Alta incidencia, riesgo epidémico.",
+    1: "Favorable situation. Low case incidence.",
+    2: "Attention. Conditions may favor transmission.",
+    3: "Alert. Significant increase in incidence.",
+    4: "Emergency. High incidence, epidemic risk.",
 }
 
 # UFs y estados
@@ -191,14 +191,14 @@ def sidebar():
     st.sidebar.markdown("---")
 
     page = st.sidebar.radio(
-        "Navegación",
-        ["Mapa de Alerta", "Predicción", "Información del Modelo", "Monitoreo"],
+        "Navigation",
+        ["Alert Map", "Prediction", "Model Info", "Monitoring"],
         index=0,
     )
 
     st.sidebar.markdown("---")
     st.sidebar.caption(
-        "TFM MLOps — Predicción de Dengue en Brasil\n\n"
+        "MLOps TFM — Dengue Prediction in Brazil\n\n"
         f"API: `{API_URL}`"
     )
 
@@ -207,22 +207,22 @@ def sidebar():
         resp = requests.get(f"{API_URL}/health", timeout=3)
         if resp.status_code == 200:
             data = resp.json()
-            status = "🟢 Online" if data["model_loaded"] else "🟡 Degradado"
+            status = "🟢 Online" if data["model_loaded"] else "🟡 Degraded"
             st.sidebar.success(f"{status} (v{data['version']})")
         else:
-            st.sidebar.error("🔴 API no responde")
+            st.sidebar.error("🔴 API not responding")
     except Exception:
-        st.sidebar.warning("⚠️ API no disponible")
+        st.sidebar.warning("⚠️ API unavailable")
 
     return page
 
 
 # --- Mapa de Alerta ---
 def map_page():
-    st.title("Mapa de Alerta — Brasil")
+    st.title("Alert Map — Brazil")
     st.markdown(
-        "Nivel de alerta de dengue por estado (UF), basado en datos "
-        "históricos de InfoDengue/Mosqlimate."
+        "Dengue alert level by state (UF), based on historical data "
+        "from InfoDengue/Mosqlimate."
     )
 
     # Controles
@@ -230,20 +230,20 @@ def map_page():
 
     col_c1, col_c2, col_c3, col_c4 = st.columns([1, 1, 1, 1.2])
     with col_c1:
-        use_latest = st.checkbox("Datos más recientes", value=True)
+        use_latest = st.checkbox("Latest data", value=True)
     with col_c2:
         year = st.selectbox(
-            "Año", range(max_year, 2009, -1), index=0, disabled=use_latest,
+            "Year", range(max_year, 2009, -1), index=0, disabled=use_latest,
         )
     with col_c3:
         default_week = max_week if use_latest else 1
         se_num = st.slider(
-            "Semana epidemiológica", 1, 53, default_week, disabled=use_latest,
+            "Epidemiological week", 1, 53, default_week, disabled=use_latest,
         )
     with col_c4:
         agg_method = st.selectbox(
-            "Agregación por UF",
-            ["Nivel predominante (moda)", "Nivel medio", "Nivel máximo"],
+            "UF aggregation",
+            ["Predominant level (mode)", "Mean level", "Maximum level"],
         )
 
     # Determinar SE a mostrar
@@ -257,7 +257,7 @@ def map_page():
     # Cargar datos
     df_year = load_year_data(sel_year)
     if df_year.empty:
-        st.warning(f"No hay datos disponibles para el año {sel_year}.")
+        st.warning(f"No data available for year {sel_year}.")
         return
 
     se_data = df_year[df_year["SE"] == se_code]
@@ -267,19 +267,19 @@ def map_page():
         if available_ses:
             closest = min(available_ses, key=lambda x: abs(x - se_code))
             st.info(
-                f"SE {se_code} no disponible. Mostrando SE {closest} "
-                f"(la más cercana con datos)."
+                f"SE {se_code} not available. Showing SE {closest} "
+                f"(closest with data)."
             )
             se_data = df_year[df_year["SE"] == closest]
             se_code = closest
         else:
-            st.warning("No hay datos para este período.")
+            st.warning("No data for this period.")
             return
 
     # Agregación
     method_key = (
-        "mode" if "moda" in agg_method
-        else ("mean" if "medio" in agg_method else "max")
+        "mode" if "mode" in agg_method
+        else ("mean" if "Mean" in agg_method else "max")
     )
     agg = aggregate_by_uf(se_data, method_key)
 
@@ -288,19 +288,19 @@ def map_page():
     se_yr = se_code // 100
     date_str = se_data["data_iniSE"].iloc[0] if "data_iniSE" in se_data.columns else ""
     st.markdown(
-        f"**Semana epidemiológica {se_week}/{se_yr}** "
+        f"**Epidemiological week {se_week}/{se_yr}** "
         f"{'(' + str(date_str) + ')' if date_str else ''} — "
-        f"{len(se_data)} registros municipales, "
-        f"{se_data['uf'].nunique()} estados"
+        f"{len(se_data)} municipal records, "
+        f"{se_data['uf'].nunique()} states"
     )
 
-    # --- Mapa choropleth (mapbox-based, more reliable with custom GeoJSON) ---
+    # --- Choropleth map ---
     geojson = load_geojson()
 
     # nivel as string for discrete color mapping
     agg["nivel_str"] = agg["nivel"].astype(str)
 
-    fig = px.choropleth_mapbox(
+    fig = px.choropleth_map(
         agg,
         geojson=geojson,
         locations="uf",
@@ -317,11 +317,12 @@ def map_page():
             "uf": False, "nivel_str": False,
         },
         labels={
-            "nivel": "Nivel", "label": "Alerta", "region": "Región",
-            "nivel_str": "Nivel",
+            "nivel": "Level", "label": "Alert", "region": "Region",
+            "nivel_str": "Level",
         },
-        mapbox_style="carto-positron",
-        center={"lat": -14.2, "lon": -51.9},
+        map_style="carto-positron",
+        center_lat=-14.2,
+        center_lon=-51.9,
         zoom=3,
         opacity=0.85,
     )
@@ -332,7 +333,7 @@ def map_page():
     fig.update_layout(
         height=550,
         margin=dict(l=0, r=0, t=10, b=0),
-        legend_title_text="Nivel de Alerta",
+        legend_title_text="Alert Level",
         legend=dict(
             orientation="h", yanchor="bottom", y=-0.01,
             xanchor="center", x=0.5,
@@ -344,18 +345,18 @@ def map_page():
     # --- Leyenda y resumen ---
     col_leg, col_stats = st.columns([1, 1])
     with col_leg:
-        st.markdown("**Escala de alerta InfoDengue:**")
+        st.markdown("**InfoDengue alert scale:**")
         for nivel, label in ALERT_LABELS.items():
             color = ALERT_COLORS[nivel]
             n_ufs = len(agg[agg["nivel"] == nivel])
             st.markdown(
                 f'<span style="color:{color}; font-size:1.3em;">●</span> '
-                f"**Nivel {nivel} — {label}**: {n_ufs} estados",
+                f"**Level {nivel} — {label}**: {n_ufs} states",
                 unsafe_allow_html=True,
             )
 
     with col_stats:
-        st.markdown("**Resumen nacional:**")
+        st.markdown("**National summary:**")
         nivel_dist = agg["nivel"].value_counts().sort_index()
         fig_pie = px.pie(
             names=[f"Nivel {n} ({ALERT_LABELS[n]})" for n in nivel_dist.index],
@@ -367,13 +368,13 @@ def map_page():
 
     # --- Detalle por municipio ---
     st.markdown("---")
-    st.subheader("Detalle por municipio")
+    st.subheader("Municipality detail")
 
     col_sel, col_info = st.columns([1, 3])
     with col_sel:
         ufs_available = sorted(se_data["uf"].unique())
         selected_uf = st.selectbox(
-            "Estado",
+            "State",
             ufs_available,
             format_func=lambda x: f"{x} — {UF_STATES.get(x, x)}",
         )
@@ -383,32 +384,32 @@ def map_page():
         [["municipio_nome", "nivel", "pop", "casos_est"]]
         .copy()
     )
-    muni.columns = ["Municipio", "Nivel", "Población", "Casos est."]
-    muni = muni.sort_values("Nivel", ascending=False).reset_index(drop=True)
+    muni.columns = ["Municipality", "Level", "Population", "Est. cases"]
+    muni = muni.sort_values("Level", ascending=False).reset_index(drop=True)
 
     with col_info:
         m1, m2, m3, m4 = st.columns(4)
         with m1:
-            st.metric("Municipios", len(muni))
+            st.metric("Municipalities", len(muni))
         with m2:
-            st.metric("Nivel máximo", int(muni["Nivel"].max()))
+            st.metric("Max level", int(muni["Level"].max()))
         with m3:
-            mode_val = muni["Nivel"].mode()
+            mode_val = muni["Level"].mode()
             st.metric(
-                "Nivel predominante",
+                "Predominant level",
                 int(mode_val.iloc[0]) if len(mode_val) > 0 else "-",
             )
         with m4:
-            pop_total = muni["Población"].sum()
+            pop_total = muni["Population"].sum()
             st.metric(
-                "Población total",
+                "Total population",
                 f"{pop_total:,.0f}" if pd.notna(pop_total) else "-",
             )
 
     # Distribución de niveles en el estado
     col_chart, col_table = st.columns([1, 2])
     with col_chart:
-        muni_dist = muni["Nivel"].value_counts().sort_index()
+        muni_dist = muni["Level"].value_counts().sort_index()
         fig_bar = px.bar(
             x=[f"N{n}" for n in muni_dist.index],
             y=muni_dist.values,
@@ -416,7 +417,7 @@ def map_page():
             color_discrete_map={
                 v: ALERT_COLORS[k] for k, v in ALERT_LABELS.items()
             },
-            labels={"x": "Nivel", "y": "Municipios"},
+            labels={"x": "Level", "y": "Municipalities"},
         )
         fig_bar.update_layout(
             height=280, showlegend=False,
@@ -435,73 +436,73 @@ def map_page():
             }
             return colors.get(val, "")
 
-        styled = muni.style.map(color_nivel, subset=["Nivel"])
+        styled = muni.style.map(color_nivel, subset=["Level"])
         st.dataframe(styled, use_container_width=True, height=300)
 
 
 # --- Predicción ---
 def prediction_page():
-    st.title("Predicción de Nivel de Alerta")
+    st.title("Alert Level Prediction")
     st.markdown(
-        "Ingresa los datos del municipio y las condiciones climáticas "
-        "para obtener una predicción del nivel de alerta de dengue."
+        "Enter the municipality data and climate conditions "
+        "to get a dengue alert level prediction."
     )
 
     col_form, col_result = st.columns([1, 1])
 
     with col_form:
-        st.subheader("Datos de entrada")
+        st.subheader("Input data")
 
         # Temporal
-        st.markdown("**Información temporal**")
+        st.markdown("**Temporal information**")
         col_m, col_se = st.columns(2)
         with col_m:
-            month = st.slider("Mes", 1, 12, value=3)
+            month = st.slider("Month", 1, 12, value=3)
         with col_se:
             # SE range coherent with selected month
             se_min = max(1, int((month - 1) * (52 / 12)) + 1)
             se_max = min(52, int(month * (52 / 12)))
             se_default = (se_min + se_max) // 2
             se = st.slider(
-                "Semana epidemiológica", se_min, se_max,
+                "Epidemiological week", se_min, se_max,
                 value=se_default,
-                help=f"Mes {month} → SE {se_min}–{se_max}",
+                help=f"Month {month} → EW {se_min}–{se_max}",
             )
 
         # Geográfica
-        st.markdown("**Información geográfica**")
+        st.markdown("**Geographic information**")
         col_uf, col_pop = st.columns(2)
         with col_uf:
             uf = st.selectbox(
-                "Estado (UF)",
+                "State (UF)",
                 options=list(UF_STATES.keys()),
                 format_func=lambda x: f"{x} - {UF_STATES[x]}",
                 index=list(UF_STATES.keys()).index("RJ"),
             )
         with col_pop:
             population = st.number_input(
-                "Población del municipio",
+                "Municipality population",
                 min_value=1000, max_value=15_000_000,
                 value=500_000, step=10_000,
             )
 
         # Climática
-        st.markdown("**Datos climáticos** (con lag de 4-8 semanas)")
+        st.markdown("**Climate data** (4-8 week lag)")
         col_t, col_h = st.columns(2)
         with col_t:
             temp_lag8w = st.number_input(
-                "Temperatura media (lag 8 sem.)", 10.0, 40.0, 26.0, 0.5,
+                "Mean temperature (8w lag)", 10.0, 40.0, 26.0, 0.5,
             )
             temp_roll12w = st.number_input(
-                "Media móvil temperatura (12 sem.)", 10.0, 40.0, 25.5, 0.5,
+                "Temperature rolling mean (12w)", 10.0, 40.0, 25.5, 0.5,
             )
         with col_h:
             humid_roll4w = st.number_input(
-                "Media móvil humedad (4 sem.)", 30.0, 100.0, 78.0, 1.0,
+                "Humidity rolling mean (4w)", 30.0, 100.0, 78.0, 1.0,
             )
             temp_x_humid = temp_lag8w * humid_roll4w  # auto-calculado
 
-        predict_btn = st.button("🔍 Predecir", type="primary", use_container_width=True)
+        predict_btn = st.button("🔍 Predict", type="primary", use_container_width=True)
 
     # Construir features
     month_sin = float(np.sin(2 * np.pi * month / 12))
@@ -532,7 +533,7 @@ def prediction_page():
         }
 
         with col_result:
-            st.subheader("Resultado")
+            st.subheader("Result")
             try:
                 resp = requests.post(f"{API_URL}/predict", json=payload, timeout=10)
                 if resp.status_code == 200:
@@ -556,14 +557,14 @@ def prediction_page():
                     )
 
                     # Probabilidades
-                    st.markdown("**Distribución de probabilidades**")
+                    st.markdown("**Probability distribution**")
                     prob_df = pd.DataFrame(
-                        {"Nivel": list(proba.keys()), "Probabilidad": list(proba.values())}
+                        {"Level": list(proba.keys()), "Probability": list(proba.values())}
                     )
                     colors = list(ALERT_COLORS.values())
                     fig = px.bar(
-                        prob_df, x="Nivel", y="Probabilidad",
-                        color="Nivel",
+                        prob_df, x="Level", y="Probability",
+                        color="Level",
                         color_discrete_sequence=colors,
                     )
                     fig.update_layout(
@@ -573,46 +574,46 @@ def prediction_page():
                     st.plotly_chart(fig, use_container_width=True)
 
                     # Detalles
-                    with st.expander("Detalles de la predicción"):
+                    with st.expander("Prediction details"):
                         st.json(data)
 
                 else:
-                    st.error(f"Error de la API: {resp.status_code} — {resp.text}")
+                    st.error(f"API error: {resp.status_code} — {resp.text}")
             except requests.ConnectionError:
                 st.error(
-                    "No se pudo conectar con la API. "
-                    "Asegúrate de que está corriendo en `localhost:8000`."
+                    "Could not connect to the API. "
+                    "Make sure it is running on `localhost:8000`."
                 )
             except Exception as e:
                 st.error(f"Error: {e}")
     else:
         with col_result:
-            st.subheader("Resultado")
-            st.info("Configura los parámetros y pulsa **Predecir**.")
+            st.subheader("Result")
+            st.info("Set the parameters and click **Predict**.")
 
             # Escala de referencia
-            st.markdown("**Escala de alerta InfoDengue:**")
+            st.markdown("**InfoDengue alert scale:**")
             for nivel, label in ALERT_LABELS.items():
                 color = ALERT_COLORS[nivel]
                 st.markdown(
                     f'<span style="color:{color}; font-weight:bold;">●</span> '
-                    f'**Nivel {nivel} — {label}**: {ALERT_DESCRIPTIONS[nivel]}',
+                    f'**Level {nivel} — {label}**: {ALERT_DESCRIPTIONS[nivel]}',
                     unsafe_allow_html=True,
                 )
 
 
 # --- Model Info ---
 def model_info_page():
-    st.title("Información del Modelo")
+    st.title("Model Information")
 
     try:
         resp = requests.get(f"{API_URL}/model/info", timeout=5)
         if resp.status_code != 200:
-            st.error("No se pudo obtener información del modelo")
+            st.error("Could not retrieve model information")
             return
         info = resp.json()
     except Exception:
-        st.warning("API no disponible. Mostrando información estática.")
+        st.warning("API unavailable. Showing static information.")
         info = {
             "name": "dengue-alertlevel-classifier",
             "version": "1", "alias": "champion",
@@ -623,7 +624,7 @@ def model_info_page():
             "classes": {str(k): v for k, v in ALERT_LABELS.items()},
             "metrics": {"macro_f1": 0.39, "accuracy": 0.88, "cohen_kappa": 0.33},
             "training_period": "2010-2021",
-            "description": "Modelo champion XGBoost con balanced weights.",
+            "description": "Champion XGBoost model with balanced weights.",
         }
 
     col1, col2, col3 = st.columns(3)
@@ -638,32 +639,32 @@ def model_info_page():
 
     col_a, col_b = st.columns(2)
     with col_a:
-        st.subheader("Detalles del modelo")
+        st.subheader("Model details")
         st.markdown(f"""
-        | Propiedad | Valor |
+        | Property | Value |
         |---|---|
-        | **Nombre** | `{info['name']}` |
-        | **Versión** | {info['version']} |
+        | **Name** | `{info['name']}` |
+        | **Version** | {info['version']} |
         | **Alias** | {info['alias']} |
-        | **Período entrenamiento** | {info['training_period']} |
-        | **N° features** | {info['n_features']} |
-        | **Target** | `{info['target']}` (niveles 1-4) |
+        | **Training period** | {info['training_period']} |
+        | **No. features** | {info['n_features']} |
+        | **Target** | `{info['target']}` (levels 1-4) |
         """)
 
-        st.markdown(f"**Descripción:** {info['description']}")
+        st.markdown(f"**Description:** {info['description']}")
 
     with col_b:
-        st.subheader("Features de producción")
+        st.subheader("Production features")
         features = info.get("features", [])
         if features:
             categories = {
-                "Temporales": [f for f in features if any(
+                "Temporal": [f for f in features if any(
                     t in f for t in ["month_", "se_", "peak", "quarter"]
                 )],
-                "Climáticas": [f for f in features if any(
+                "Climate": [f for f in features if any(
                     t in f for t in ["temp", "umid", "humid"]
                 )],
-                "Geográficas": [f for f in features if any(
+                "Geographic": [f for f in features if any(
                     t in f for t in ["pop_", "region_"]
                 )],
             }
@@ -674,22 +675,22 @@ def model_info_page():
 
     # Métricas detalladas
     st.markdown("---")
-    st.subheader("Métricas del Champion")
+    st.subheader("Champion Metrics")
 
     metrics = info.get("metrics", {})
     if metrics:
         metrics_df = pd.DataFrame(
-            {"Métrica": list(metrics.keys()), "Valor": list(metrics.values())}
+            {"Metric": list(metrics.keys()), "Value": list(metrics.values())}
         )
         fig = px.bar(
-            metrics_df, x="Métrica", y="Valor",
-            color="Valor", color_continuous_scale="RdYlGn",
+            metrics_df, x="Metric", y="Value",
+            color="Value", color_continuous_scale="RdYlGn",
         )
         fig.update_layout(height=350, yaxis_range=[0, 1])
         st.plotly_chart(fig, use_container_width=True)
 
     # Artefactos
-    st.subheader("Artefactos del modelo")
+    st.subheader("Model artifacts")
     artifacts_dir = PROJECT_ROOT / "mlflow-artifacts" / "6386d99c6830446080b7e29945d05af9" / "artifacts"
     if artifacts_dir.exists():
         col_cm, col_fi = st.columns(2)
@@ -697,7 +698,7 @@ def model_info_page():
         fi_path = artifacts_dir / "feature_importance.png"
         if cm_path.exists():
             with col_cm:
-                st.image(str(cm_path), caption="Matriz de Confusión (Test 2024)")
+                st.image(str(cm_path), caption="Confusion Matrix (Test 2024)")
         if fi_path.exists():
             with col_fi:
                 st.image(str(fi_path), caption="Feature Importance")
@@ -707,12 +708,12 @@ def model_info_page():
         if shap_path.exists():
             st.image(str(shap_path), caption="SHAP Summary Plot", width=600)
     else:
-        st.info("Artefactos no encontrados localmente.")
+        st.info("Artifacts not found locally.")
 
 
 # --- Monitoreo ---
 def monitoring_page():
-    st.title("Monitoreo del Modelo")
+    st.title("Model Monitoring")
 
     # Predicciones logueadas
     log_path = PROJECT_ROOT / "monitoring" / "predictions_log.csv"
@@ -721,10 +722,10 @@ def monitoring_page():
     col1, col2 = st.columns(2)
 
     with col1:
-        st.subheader("Predicciones recientes")
+        st.subheader("Recent predictions")
         if log_path.exists():
             df = pd.read_csv(log_path)
-            st.metric("Total predicciones", len(df))
+            st.metric("Total predictions", len(df))
 
             # Distribución
             if "predicted_nivel" in df.columns:
@@ -733,15 +734,15 @@ def monitoring_page():
                     names=[ALERT_LABELS.get(n, str(n)) for n in dist.index],
                     values=dist.values,
                     color_discrete_sequence=list(ALERT_COLORS.values()),
-                    title="Distribución de niveles predichos",
+                    title="Distribution of predicted levels",
                 )
                 st.plotly_chart(fig, use_container_width=True)
 
             # Últimas predicciones
-            with st.expander("Últimas 20 predicciones"):
+            with st.expander("Last 20 predictions"):
                 st.dataframe(df.tail(20), use_container_width=True)
         else:
-            st.info("Aún no hay predicciones registradas.")
+            st.info("No predictions recorded yet.")
 
     with col2:
         st.subheader("Data Drift")
@@ -751,7 +752,7 @@ def monitoring_page():
             reports = sorted(drift_report_path.glob("*.html"), reverse=True)
             if reports:
                 selected = st.selectbox(
-                    "Seleccionar reporte",
+                    "Select report",
                     reports,
                     format_func=lambda p: p.stem,
                 )
@@ -759,41 +760,41 @@ def monitoring_page():
                     with open(selected, "r", encoding="utf-8") as f:
                         st_components.html(f.read(), height=600, scrolling=True)
             else:
-                st.info("No hay reportes de drift disponibles.")
+                st.info("No drift reports available.")
         else:
             st.info(
-                "Los reportes de monitoreo se generarán automáticamente.\n\n"
-                "Ejecuta `python -m src.monitoring.drift_detector` para generar un reporte."
+                "Monitoring reports will be generated automatically.\n\n"
+                "Run `python -m src.monitoring.drift_detector` to generate a report."
             )
 
     # Opción para generar reporte
     st.markdown("---")
     st.markdown(
-        "**¿Cómo generar reportes?** Ejecuta desde la terminal:\n\n"
+        "**How to generate reports?** Run from the terminal:\n\n"
         "```bash\n"
-        "python scripts/monitoring_demo.py        # Demo con datos reales o sintéticos\n"
-        "python -m src.monitoring.drift_detector   # Desde predicciones de la API\n"
+        "python scripts/monitoring_demo.py        # Demo with real or synthetic data\n"
+        "python -m src.monitoring.drift_detector   # From API predictions\n"
         "```"
     )
-    if st.button("📊 Flush predicciones a CSV", type="secondary"):
+    if st.button("📊 Flush predictions to CSV", type="secondary"):
         try:
             requests.post(f"{API_URL}/monitoring/flush", timeout=5)
-            st.success("Buffer de predicciones guardado en monitoring/predictions_log.csv")
+            st.success("Prediction buffer saved to monitoring/predictions_log.csv")
         except Exception:
-            st.warning("API no disponible para flush.")
+            st.warning("API unavailable for flush.")
 
 
 # --- Main ---
 def main():
     page = sidebar()
 
-    if page == "Mapa de Alerta":
+    if page == "Alert Map":
         map_page()
-    elif page == "Predicción":
+    elif page == "Prediction":
         prediction_page()
-    elif page == "Información del Modelo":
+    elif page == "Model Info":
         model_info_page()
-    elif page == "Monitoreo":
+    elif page == "Monitoring":
         monitoring_page()
 
 
